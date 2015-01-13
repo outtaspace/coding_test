@@ -56,7 +56,7 @@ sub new {
 }
 
 sub info {
-    shift->{'engine'};
+    printf "Engine: %s\n", shift->{'engine'};
 }
 
 package main;
