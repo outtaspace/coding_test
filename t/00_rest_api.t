@@ -13,12 +13,14 @@ my $t = Test::Mojo->new;
 #########################################################################################
 ## /article/comments ####################################################################
 {
-    my $form_hashref = {article_id => 100500};
+    my $form_hashref = {article_id => 1};
 
     $t->get_ok('/article/comments' => form => $form_hashref)
-        ->status_is(200);
+        ->status_is(200)
+        ->json_is('/status' => 200)
+        ->json_is('/comments' => []);
 
-    my $make_some_bad_decision = sub {
+    my $make_some_bad_decisions = sub {
         my $callback = shift;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
@@ -28,12 +30,12 @@ my $t = Test::Mojo->new;
             ->json_is('/status' => 422);
     };
 
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         delete $hashref->{'article_id'};
         return $hashref;
     });
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         $hashref->{'article_id'} = 'string';
         return $hashref;
@@ -55,7 +57,7 @@ my $t = Test::Mojo->new;
         ->json_is('/status' => 200)
         ->json_like('/comment_id' => qr{^\d+$}x);
 
-    my $make_some_bad_decision = sub {
+    my $make_some_bad_decisions = sub {
         my $callback = shift;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
@@ -65,31 +67,37 @@ my $t = Test::Mojo->new;
             ->json_is('/status' => 422);
     };
 
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         delete $hashref->{'article_id'};
         return $hashref;
     });
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         $hashref->{'article_id'} = 'string';
         return $hashref;
     });
 
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         delete $hashref->{'user_id'};
         return $hashref;
     });
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         $hashref->{'user_id'} = 'string';
         return $hashref;
     });
 
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         delete $hashref->{'comment'};
+        return $hashref;
+    });
+
+    $make_some_bad_decisions->(sub {
+        my $hashref = shift;
+        $hashref->{'parent_id'} = 'string';
         return $hashref;
     });
 }
@@ -104,7 +112,7 @@ my $t = Test::Mojo->new;
         ->status_is(200)
         ->json_is('/status' => 200);
 
-    my $make_some_bad_decision = sub {
+    my $make_some_bad_decisions = sub {
         my $callback = shift;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
@@ -114,12 +122,12 @@ my $t = Test::Mojo->new;
             ->json_is('/status' => 422)
     };
 
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         delete $hashref->{'id'};
         return $hashref;
     });
-    $make_some_bad_decision->(sub {
+    $make_some_bad_decisions->(sub {
         my $hashref = shift;
         $hashref->{'id'} = 'string';
         return $hashref;
