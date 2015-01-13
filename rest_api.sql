@@ -50,3 +50,14 @@ insert into articles () values ();
 insert into users () values ();
 commit;
 
+insert into comments (parent_id, comment, article_id, user_id)
+values
+(0, 'Hello',     1, 1),
+(1, 'Hello_1_0', 1, 1),
+(1, 'Hello_1_1', 1, 1),
+(2, 'Hello_2_0', 1, 1),
+(2, 'Hello_2_1', 1, 1),
+(3, 'Hello_3_0', 1, 1),
+(3, 'Hello_3_1', 1, 1),
+(0, 'Now I\'m Here', 1, 1);
+
