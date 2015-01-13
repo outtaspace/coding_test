@@ -24,7 +24,73 @@ get '/article/comments' => sub {
             if $validation->has_error;
     }
 
-    $self->render(json => {status => 200, comments => []});
+    my $sth = $self->app->dbh->prepare(q{
+        select
+            id, parent_id, user_id, comment
+        from
+            comments
+        where
+            article_id = ?
+        order by
+            id, parent_id
+    });
+    $sth->execute($self->param('article_id'));
+
+    my $comments = [
+        {
+            id        => '1',
+            parent_id => '0',
+            comment   => 'Hello',
+            comments => [
+                {
+                    id        => '2',
+                    parent_id => '1',
+                    comment   => 'Hello_1_0',
+                    comments  => [
+                        {
+                            id        => '4',
+                            parent_id => '1',
+                            comment   => 'Hello_2_0',
+                            comments  => [],
+                        },
+                        {
+                            id        => '5',
+                            parent_id => '1',
+                            comment   => 'Hello_2_1',
+                            comments  => [],
+                        },
+                    ],
+                },
+                {
+                    id        => '3',
+                    parent_id => '1',
+                    comment   => 'Hello_1_1',
+                    comments  => [
+                        {
+                            id        => '6',
+                            parent_id => '1',
+                            comment   => 'Hello_3_0',
+                            comments  => [],
+                        },
+                        {
+                            id        => '7',
+                            parent_id => '1',
+                            comment   => 'Hello_3_1',
+                            comments  => [],
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id        => '8',
+            parent_id => '0',
+            comment   => q{Now I'm Here},
+            comments  => [],
+        },
+    ];
+
+    $self->render(json => {status => 200, comments => $comments});
 };
 
 post '/article/comment/create' => sub {
@@ -82,9 +148,4 @@ post '/article/comment/delete' => sub {
 };
 
 app->start;
-
-__END__
-
-Run all tests with the command:
-$ ./rest_api.pl test
 

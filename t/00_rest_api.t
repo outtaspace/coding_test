@@ -18,7 +18,7 @@ my $t = Test::Mojo->new;
     $t->get_ok('/article/comments' => form => $form_hashref)
         ->status_is(200)
         ->json_is('/status' => 200)
-        ->json_is('/comments' => []);
+        ->json_is('/comments' => all_comments());
 
     my $make_some_bad_decisions = sub {
         my $callback = shift;
@@ -41,6 +41,7 @@ my $t = Test::Mojo->new;
         return $hashref;
     });
 }
+
 
 
 #########################################################################################
@@ -135,4 +136,62 @@ my $t = Test::Mojo->new;
 }
 
 done_testing();
+
+#########################################################################################
+## subroutines ##########################################################################
+sub all_comments {
+    return [
+        {
+            id        => '1',
+            parent_id => '0',
+            comment   => 'Hello',
+            comments => [
+                {
+                    id        => '2',
+                    parent_id => '1',
+                    comment   => 'Hello_1_0',
+                    comments  => [
+                        {
+                            id        => '4',
+                            parent_id => '1',
+                            comment   => 'Hello_2_0',
+                            comments  => [],
+                        },
+                        {
+                            id        => '5',
+                            parent_id => '1',
+                            comment   => 'Hello_2_1',
+                            comments  => [],
+                        },
+                    ],
+                },
+                {
+                    id        => '3',
+                    parent_id => '1',
+                    comment   => 'Hello_1_1',
+                    comments  => [
+                        {
+                            id        => '6',
+                            parent_id => '1',
+                            comment   => 'Hello_3_0',
+                            comments  => [],
+                        },
+                        {
+                            id        => '7',
+                            parent_id => '1',
+                            comment   => 'Hello_3_1',
+                            comments  => [],
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id        => '8',
+            parent_id => '0',
+            comment   => q{Now I'm Here},
+            comments  => [],
+        },
+    ];
+}
 
