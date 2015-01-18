@@ -13,7 +13,7 @@ app->attr(dbh => sub {
     return DBI->connect(@{ $hashref->{'dbh'} });
 });
 
-get '/article/comments' => sub {
+get '/articles/comment' => sub {
     my $self = shift;
 
     {
@@ -93,7 +93,7 @@ get '/article/comments' => sub {
     $self->render(json => {status => 200, comments => $comments});
 };
 
-post '/article/comment/create' => sub {
+post '/articles/comment' => sub {
     my $self = shift;
 
     {
@@ -131,7 +131,7 @@ post '/article/comment/create' => sub {
     $self->render(json => {status => 200, comment_id => $comment_id});
 };
 
-post '/article/comment/delete' => sub {
+del '/articles/comment' => sub {
     my $self = shift;
 
     {

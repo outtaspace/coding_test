@@ -11,11 +11,11 @@ require $FindBin::Bin .'/../rest_api.pl';
 my $t = Test::Mojo->new;
 
 #########################################################################################
-## /article/comments ####################################################################
+## GET /articles/comment ################################################################
 {
     my $form_hashref = {article_id => 1};
 
-    $t->get_ok('/article/comments' => form => $form_hashref)
+    $t->get_ok('/articles/comment' => form => $form_hashref)
         ->status_is(200)
         ->json_is('/status' => 200)
         ->json_is('/comments' => all_comments());
@@ -25,7 +25,7 @@ my $t = Test::Mojo->new;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
 
-        $t->get_ok('/article/comments' => form => $bad_form_hashref)
+        $t->get_ok('/articles/comment' => form => $bad_form_hashref)
             ->status_is(422)
             ->json_is('/status' => 422);
     };
@@ -43,9 +43,8 @@ my $t = Test::Mojo->new;
 }
 
 
-
 #########################################################################################
-## /article/comment/create ##############################################################
+## POST /articles/comment ###############################################################
 {
     my $form_hashref = {
         article_id => 1,
@@ -53,7 +52,7 @@ my $t = Test::Mojo->new;
         comment    => 'Hello!',
     };
 
-    $t->post_ok('/article/comment/create' => form => $form_hashref)
+    $t->post_ok('/articles/comment' => form => $form_hashref)
         ->status_is(200)
         ->json_is('/status' => 200)
         ->json_like('/comment_id' => qr{^\d+$}x);
@@ -63,7 +62,7 @@ my $t = Test::Mojo->new;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
 
-        $t->post_ok('/article/comment/create' => form => $bad_form_hashref)
+        $t->post_ok('/articles/comment' => form => $bad_form_hashref)
             ->status_is(422)
             ->json_is('/status' => 422);
     };
@@ -105,11 +104,11 @@ my $t = Test::Mojo->new;
 
 
 #########################################################################################
-## /article/comment/delete ##############################################################
+## DELETE /articles/comment #############################################################
 {
     my $form_hashref = {id => 100500};
 
-    $t->post_ok('/article/comment/delete' => form => $form_hashref)
+    $t->delete_ok('/articles/comment' => form => $form_hashref)
         ->status_is(200)
         ->json_is('/status' => 200);
 
@@ -118,7 +117,7 @@ my $t = Test::Mojo->new;
 
         my $bad_form_hashref = $callback->(dclone $form_hashref);
 
-        $t->post_ok('/article/comment/delete' => form => $bad_form_hashref)
+        $t->delete_ok('/articles/comment' => form => $bad_form_hashref)
             ->status_is(422)
             ->json_is('/status' => 422)
     };
@@ -134,6 +133,7 @@ my $t = Test::Mojo->new;
         return $hashref;
     });
 }
+
 
 done_testing();
 
