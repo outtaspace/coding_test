@@ -1,5 +1,3 @@
-select last_insert_id();
-
 drop database if exists coding_test;
 create database coding_test character set=utf8;
 
@@ -48,7 +46,6 @@ add constraint fk_comments_to_users
 begin;
 insert into articles () values ();
 insert into users () values ();
-commit;
 
 insert into comments (parent_id, comment, article_id, user_id)
 values
@@ -60,4 +57,5 @@ values
 (3, 'Hello_3_0', 1, 1),
 (3, 'Hello_3_1', 1, 1),
 (0, 'Now I\'m Here', 1, 1);
+commit;
 
