@@ -45,7 +45,7 @@ get '/articles/comment' => sub {
 
         $parent{$id} = $each_comment->{'comments'};
 
-        push @{ $parent{ $parent_id == 0 ? 0 : $parent_id }  }, $each_comment;
+        push @{ $parent{$parent_id} }, $each_comment;
     }
 
     $self->render(json => {status => 200, comments => $parent{0}});
