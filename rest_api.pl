@@ -32,65 +32,23 @@ get '/articles/comment' => sub {
         where
             article_id = ?
         order by
-            id, parent_id
+            parent_id, id
     });
     $sth->execute($self->param('article_id'));
 
-    my $comments = [
-        {
-            id        => '1',
-            parent_id => '0',
-            comment   => 'Hello',
-            comments => [
-                {
-                    id        => '2',
-                    parent_id => '1',
-                    comment   => 'Hello_1_0',
-                    comments  => [
-                        {
-                            id        => '4',
-                            parent_id => '1',
-                            comment   => 'Hello_2_0',
-                            comments  => [],
-                        },
-                        {
-                            id        => '5',
-                            parent_id => '1',
-                            comment   => 'Hello_2_1',
-                            comments  => [],
-                        },
-                    ],
-                },
-                {
-                    id        => '3',
-                    parent_id => '1',
-                    comment   => 'Hello_1_1',
-                    comments  => [
-                        {
-                            id        => '6',
-                            parent_id => '1',
-                            comment   => 'Hello_3_0',
-                            comments  => [],
-                        },
-                        {
-                            id        => '7',
-                            parent_id => '1',
-                            comment   => 'Hello_3_1',
-                            comments  => [],
-                        },
-                    ],
-                },
-            ],
-        },
-        {
-            id        => '8',
-            parent_id => '0',
-            comment   => q{Now I'm Here},
-            comments  => [],
-        },
-    ];
+    my %parent = (0 => []);
 
-    $self->render(json => {status => 200, comments => $comments});
+    while (my $each_comment = $sth->fetchrow_hashref) {
+        my ($id, $parent_id) = map { $each_comment->{$_} } qw(id parent_id);
+
+        $each_comment->{'comments'} = [];
+
+        $parent{$id} = $each_comment->{'comments'};
+
+        push @{ $parent{ $parent_id == 0 ? 0 : $parent_id }  }, $each_comment;
+    }
+
+    $self->render(json => {status => 200, comments => $parent{0}});
 };
 
 post '/articles/comment' => sub {
