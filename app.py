@@ -17,4 +17,3 @@ def configure(app):
 app = Flask(__name__)
 app.register_blueprint(articles)
 configure(app)
-

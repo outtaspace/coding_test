@@ -18,12 +18,11 @@ class BlogAPITest(unittest.TestCase):
         self.assertTrue(type(data['articles']) is list)
        
     def test_creating_article(self):
-        data = {
-            'parent_id': 0,
-            'comment': ''
-        }
-        response = self.app.post('/blog/articles', data=json.dumps(data))
-
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(parent_id=42, comment='tratata'),
+            content_type='application/x-www-form-urlencoded'
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
         
