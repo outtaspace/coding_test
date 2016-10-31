@@ -31,6 +31,94 @@ class BlogAPITest(unittest.TestCase):
         self.assertTrue('article_id' in data)
         self.assertEqual(int(data['article_id']), 42)
  
+
+    def test_creating_article_validation(self):
+        # parent_id is not exists
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(comment='tratata'),
+            content_type='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'parent_id' in data
+            and type(data['parent_id']) is list
+            and len(data['parent_id']) == 1
+            and data['parent_id'][0] == 'This field is required.'
+        )
+
+        # parent_id is empty string
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(parent_id='', comment='tratata'),
+            content_type='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'parent_id' in data
+            and type(data['parent_id']) is list
+            and len(data['parent_id']) == 1
+            and data['parent_id'][0] == 'This field is required.'
+        )
+
+        # parent_id is not integer
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(parent_id='tratata', comment='tratata'),
+            content_type='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'parent_id' in data
+            and type(data['parent_id']) is list
+            and len(data['parent_id']) == 1
+            and data['parent_id'][0] == 'This field is required.'
+        )
+
+        # comment is not exists
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(parent_id=0),
+            content_type='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'parent_id' in data
+            and type(data['parent_id']) is list
+            and len(data['parent_id']) == 1
+            and data['parent_id'][0] == 'This field is required.'
+        )
+
+
+        # comment is empty string
+        response = self.app.post(
+            '/blog/articles',
+            data=dict(parent_id=0, comment=''),
+            content_type='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'parent_id' in data
+            and type(data['parent_id']) is list
+            and len(data['parent_id']) == 1
+            and data['parent_id'][0] == 'This field is required.'
+        )
+
     def test_getting_article(self):
         response = self.app.get('/blog/articles/42')
 
