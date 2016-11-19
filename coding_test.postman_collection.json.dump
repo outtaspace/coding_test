@@ -1,0 +1,175 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Coding Test - Blog API",
+		"_postman_id": "561b29ee-32c4-4e51-ab48-cf210fd32c65",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://127.0.0.1:5000/blog/articles",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"First article\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"Article\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1",
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>/comments",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1/comments",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>/comments",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1/comments",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"Subject\", \"comment\": \"Comment\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>/comments/<int:comment_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1/comments/1",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"Another subject\", \"comment\": \"Another comment\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>/comments/<int:comment_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1/comments/1",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"Another subject\", \"comment\": \"Another comment\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/blog/articles/<int:article_id>/comments/<int:comment_id>",
+			"request": {
+				"url": "http://127.0.0.1:5000/blog/articles/1/comments/1",
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
