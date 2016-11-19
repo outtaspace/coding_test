@@ -117,7 +117,7 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'application/json')
 
         data = json.loads(response.data)
-        self.assertTrue(type(data) is dict)
+        self.assertEqual(data, dict())
 
     def _test_getting_comment(self):
         response = self.app.get(self._comment_url())
