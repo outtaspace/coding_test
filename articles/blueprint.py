@@ -24,8 +24,7 @@ def get_all_articles():
 @articles.route('/blog/articles', methods=['PUT'])
 def create_article():
     form = ArticleForm.from_json(request.get_json())
-    if not form.validate():
-        raise ValidationError(form.errors)
+    if not form.validate(): raise ValidationError(form.errors)
     article = Article()
     article.name = form.data['name']
     db.session.add(article)
@@ -35,8 +34,7 @@ def create_article():
 @articles.route('/blog/articles/<int:article_id>', methods=['POST'])
 def update_article(article_id):
     form = ArticleForm.from_json(request.get_json())
-    if not form.validate():
-        raise ValidationError(form.errors)
+    if not form.validate(): raise ValidationError(form.errors)
     article = Article.query.filter(Article.id == article_id).first_or_404()
     article.name = form.data['name']
     db.session.add(article)
@@ -72,8 +70,7 @@ def get_all_comments(article_id):
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['PUT'])
 def create_comment(article_id):
     form = ArticleCommentForm.from_json(request.get_json())
-    if not form.validate():
-        raise ValidationError(form.errors)
+    if not form.validate(): raise ValidationError(form.errors)
     comment = ArticleComment()
     comment.article_id = article_id
     if 'parent_id' in form.data and type(form.data['parent_id']) is int:
@@ -87,8 +84,7 @@ def create_comment(article_id):
 @articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['POST'])
 def update_comment(article_id, comment_id):
     form = ArticleCommentForm.from_json(request.get_json())
-    if not form.validate():
-        raise ValidationError(form.errors)
+    if not form.validate(): raise ValidationError(form.errors)
     comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(ArticleComment.article_id == article_id).first_or_404()
     comment.article_id = article_id
     if 'parent_id' in form.data and type(form.data['parent_id']) is int:
