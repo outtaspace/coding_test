@@ -29,4 +29,3 @@ manager.add_command('db', MigrateCommand)
 
 from articles.blueprint import articles
 app.register_blueprint(articles)
-

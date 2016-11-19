@@ -2,7 +2,9 @@ import unittest
 from flask import json
 from app import app
 
+
 class BlogAPITest(unittest.TestCase):
+
     def setUp(self):
         self._article_id = None
         self._comment_id = None
@@ -25,14 +27,14 @@ class BlogAPITest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
         self.assertTrue(
             type(data) is dict
             and 'articles' in data
             and type(data['articles']) is list
         )
-       
+
     def _test_creating_article(self):
         response = self.app.put(
             self._articles_url(),
@@ -49,7 +51,7 @@ class BlogAPITest(unittest.TestCase):
             and type(data['id']) is int
         )
         self._article_id = str(data['id'])
- 
+
     def _test_updating_article(self):
         response = self.app.post(
             self._article_url(),
@@ -58,17 +60,18 @@ class BlogAPITest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
         self.assertEqual(data, dict())
- 
+
     def _test_getting_article(self):
         response = self.app.get(self._article_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
-        self.assertEqual(data, dict(id=int(self._article_id), name='Another name'))
+        self.assertEqual(data, dict(
+            id=int(self._article_id), name='Another name'))
 
     def _test_deleting_article(self):
         response = self.app.delete(self._article_url())
@@ -123,7 +126,7 @@ class BlogAPITest(unittest.TestCase):
         response = self.app.get(self._comment_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
         self.assertEqual(data, dict(
             id=int(self._comment_id),
@@ -137,16 +140,16 @@ class BlogAPITest(unittest.TestCase):
         response = self.app.delete(self._comment_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
-        self.assertEqual(data, dict());
+        self.assertEqual(data, dict())
 
     def test_crud_for_articles(self):
         self._test_creating_article()
         self._test_updating_article()
         self._test_getting_article()
         self._test_deleting_article()
-       
+
     def test_getting_all_comments(self):
         self._test_creating_article()
 
@@ -154,7 +157,7 @@ class BlogAPITest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        
+
         data = json.loads(response.data)
         self.assertTrue(
             type(data) is dict
@@ -174,5 +177,5 @@ class BlogAPITest(unittest.TestCase):
 
         self._test_deleting_article()
 
-if __name__ == '__main__': unittest.main()
-
+if __name__ == '__main__':
+    unittest.main()

@@ -14,6 +14,7 @@ def handle_validation_error(error):
     response.status_code = error.status_code
     return response
 
+
 @articles.route('/blog/articles', methods=['GET'])
 def get_all_articles():
     articles = []
@@ -21,25 +22,30 @@ def get_all_articles():
         articles.append(dict(id=row.id, name=row.name))
     return jsonify(articles=articles)
 
+
 @articles.route('/blog/articles', methods=['PUT'])
 def create_article():
     form = ArticleForm.from_json(request.get_json())
-    if not form.validate(): raise ValidationError(form.errors)
+    if not form.validate():
+        raise ValidationError(form.errors)
     article = Article()
     article.name = form.data['name']
     db.session.add(article)
     db.session.commit()
     return jsonify(id=article.id), 201
 
+
 @articles.route('/blog/articles/<int:article_id>', methods=['POST'])
 def update_article(article_id):
     form = ArticleForm.from_json(request.get_json())
-    if not form.validate(): raise ValidationError(form.errors)
+    if not form.validate():
+        raise ValidationError(form.errors)
     article = Article.query.filter(Article.id == article_id).first_or_404()
     article.name = form.data['name']
     db.session.add(article)
     db.session.commit()
     return jsonify()
+
 
 @articles.route('/blog/articles/<int:article_id>', methods=['GET'])
 def get_article(article_id):
@@ -47,6 +53,7 @@ def get_article(article_id):
     db.session.add(article)
     db.session.commit()
     return jsonify(id=article.id, name=article.name)
+
 
 @articles.route('/blog/articles/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
@@ -67,37 +74,44 @@ def get_all_comments(article_id):
         ))
     return jsonify(comments=comments)
 
+
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['PUT'])
 def create_comment(article_id):
     form = ArticleCommentForm.from_json(request.get_json())
-    if not form.validate(): raise ValidationError(form.errors)
+    if not form.validate():
+        raise ValidationError(form.errors)
     comment = ArticleComment()
     comment.article_id = article_id
     if 'parent_id' in form.data and type(form.data['parent_id']) is int:
         comment.parent_id = form.data['parent_id']
     comment.name = form.data['name']
-    comment.comment = form.data['comment'] 
+    comment.comment = form.data['comment']
     db.session.add(comment)
     db.session.commit()
     return jsonify(id=comment.id), 201
 
+
 @articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['POST'])
 def update_comment(article_id, comment_id):
     form = ArticleCommentForm.from_json(request.get_json())
-    if not form.validate(): raise ValidationError(form.errors)
-    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(ArticleComment.article_id == article_id).first_or_404()
+    if not form.validate():
+        raise ValidationError(form.errors)
+    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(
+        ArticleComment.article_id == article_id).first_or_404()
     comment.article_id = article_id
     if 'parent_id' in form.data and type(form.data['parent_id']) is int:
         comment.parent_id = form.data['parent_id']
     comment.name = form.data['name']
-    comment.comment = form.data['comment'] 
+    comment.comment = form.data['comment']
     db.session.add(comment)
     db.session.commit()
     return jsonify()
 
+
 @articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['GET'])
 def get_comment(article_id, comment_id):
-    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(ArticleComment.article_id == article_id).first_or_404()
+    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(
+        ArticleComment.article_id == article_id).first_or_404()
     return jsonify(
         id=comment.id,
         article_id=comment.article_id,
@@ -106,10 +120,11 @@ def get_comment(article_id, comment_id):
         comment=comment.comment
     )
 
+
 @articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['DELETE'])
 def delete_comment(article_id, comment_id):
-    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(ArticleComment.article_id == article_id).first_or_404()
+    comment = ArticleComment.query.filter(ArticleComment.id == comment_id).filter(
+        ArticleComment.article_id == article_id).first_or_404()
     db.session.delete(comment)
     db.session.commit()
     return jsonify()
-
