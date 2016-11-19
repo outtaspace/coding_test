@@ -1,10 +1,12 @@
 import wtforms
+import wtforms_json
 from wtforms import validators
 
+wtforms_json.init()
 
 class ArticleForm(wtforms.Form):
-    parent_id = wtforms.IntegerField('parent_id', validators=[validators.DataRequired()])
-    comment = wtforms.TextAreaField('comment', validators=[validators.DataRequired()])
+    id = wtforms.IntegerField('id', validators=[validators.Optional()])
+    name = wtforms.StringField('name', validators=[validators.DataRequired()])
 
 
 class ValidationError(Exception):
@@ -16,3 +18,4 @@ class ValidationError(Exception):
 
     def to_dict(self):
         return dict(self.errors or ())
+
