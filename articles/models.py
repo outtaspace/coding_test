@@ -17,12 +17,8 @@ class ArticleComment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey('articles.id'), nullable=False)
     parent_id = db.Column(db.Integer)
+    name = db.Column(db.String(255), nullable=False)
     comment = db.Column(db.Text, nullable=False)
-
-    def __init__(self, article_id, parent_id, comment):
-        self.id = article_id
-        self.parent_id = parent_id
-        self.comment
 
     def __repr__(self):
         return '<ArticleComment %r>' % self.article_id, self.parent_id, self.comment
