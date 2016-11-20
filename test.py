@@ -14,13 +14,13 @@ class BlogAPITest(unittest.TestCase):
         return '/blog/articles'
 
     def _article_url(self):
-        return self._articles_url() + '/' + self._article_id
+        return '{}/{}'.format(self._articles_url(), self._article_id)
 
     def _comments_url(self):
-        return self._article_url() + '/comments'
+        return '{}/comments'.format(self._article_url())
 
     def _comment_url(self):
-        return self._comments_url() + '/' + self._comment_id
+        return '{}/{}'.format(self._comments_url(), self._comment_id)
 
     def test_getting_all_articles(self):
         response = self.app.get(self._articles_url())
@@ -71,7 +71,9 @@ class BlogAPITest(unittest.TestCase):
 
         data = json.loads(response.data)
         self.assertEqual(data, dict(
-            id=int(self._article_id), name='Another name'))
+            id=int(self._article_id),
+            name='Another name'
+        ))
 
     def _test_deleting_article(self):
         response = self.app.delete(self._article_url())

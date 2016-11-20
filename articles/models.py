@@ -16,8 +16,11 @@ class ArticleComment(db.Model):
     __tablename__ = 'article_comments'
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey(
-        'articles.id'), nullable=False)
+    article_id = db.Column(
+        db.Integer,
+        db.ForeignKey('articles.id'),
+        nullable=False
+    )
     parent_id = db.Column(db.Integer)
     name = db.Column(db.String(255), nullable=False)
     comment = db.Column(db.Text, nullable=False)
