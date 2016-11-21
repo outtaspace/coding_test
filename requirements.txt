@@ -1,8 +1,6 @@
-click==6.6
 Flask==0.11.1
-itsdangerous==0.24
-Jinja2==2.8
-MarkupSafe==0.23
-Werkzeug==0.11.10
-flask-inputs==0.2.0
-Flask-WTF
+Flask-Migrate==2.0.0
+Flask-Script==2.0.5
+Flask-SQLAlchemy==2.1
+Flask-WTF==0.13.1
+mysql-connector==2.1.4
