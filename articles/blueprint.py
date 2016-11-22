@@ -91,7 +91,10 @@ def create_comment(article_id):
     return jsonify(id=comment.id), 201
 
 
-@articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['POST'])
+@articles.route(
+    '/blog/articles/<int:article_id>/comments/<int:comment_id>',
+    methods=['POST']
+)
 def update_comment(article_id, comment_id):
     form = ArticleCommentForm.from_json(request.get_json())
     if not form.validate():
@@ -113,13 +116,17 @@ def update_comment(article_id, comment_id):
     return jsonify()
 
 
-@articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['GET'])
+@articles.route(
+    '/blog/articles/<int:article_id>/comments/<int:comment_id>',
+    methods=['GET']
+)
 def get_comment(article_id, comment_id):
     comment = (
         ArticleComment
         .query
         .filter(ArticleComment.id == comment_id)
         .filter(ArticleComment.article_id == article_id)
+        .order_by(ArticleComment.parent_id, ArticleComment.id)
         .first_or_404()
     )
     return jsonify(
@@ -131,7 +138,10 @@ def get_comment(article_id, comment_id):
     )
 
 
-@articles.route('/blog/articles/<int:article_id>/comments/<int:comment_id>', methods=['DELETE'])
+@articles.route(
+    '/blog/articles/<int:article_id>/comments/<int:comment_id>',
+    methods=['DELETE']
+)
 def delete_comment(article_id, comment_id):
     comment = (
         ArticleComment
