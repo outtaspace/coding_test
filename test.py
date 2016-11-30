@@ -19,6 +19,9 @@ class BlogAPITest(unittest.TestCase):
     def _comments_url(self):
         return '{}/comments'.format(self._article_url())
 
+    def _comments_as_tree_url(self):
+        return '{}/comments/as_tree'.format(self._article_url())
+
     def _comment_url(self):
         return '{}/{}'.format(self._comments_url(), self._comment_id)
 
@@ -87,13 +90,14 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content_type, 'text/html')
 
-    def _test_creating_comment(self):
+    def _test_creating_comment(self, parent_id=None):
         response = self.app.put(
             self._comments_url(),
             data=json.dumps(dict(
                 name='Subject',
                 comment='Comment',
-                article_id=self._article_id
+                article_id=self._article_id,
+                parent_id=parent_id
             )),
             content_type='application/json'
         )
@@ -163,8 +167,8 @@ class BlogAPITest(unittest.TestCase):
         data = json.loads(response.data)
         self.assertTrue(
             type(data) is dict
-            and 'comments' in data
-            and type(data['comments']) is list
+            and 'all_comments' in data
+            and type(data['all_comments']) is list
         )
 
         self._test_deleting_article()
@@ -178,6 +182,54 @@ class BlogAPITest(unittest.TestCase):
         self._test_deleting_comment()
 
         self._test_deleting_article()
+
+    def test_getting_all_comments_as_tree(self):
+        self._test_creating_article()
+
+        response = self.app.get(self._comments_as_tree_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content_type, 'application/json')
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'all_comments' in data
+            and type(data['all_comments']) is list
+            and len(data['all_comments']) == 0
+        )
+
+        self._test_creating_comment()
+
+        response = self.app.get(self._comments_as_tree_url())
+        data = json.loads(response.data)
+        self.assertTrue(
+            type(data) is dict
+            and 'all_comments' in data
+            and type(data['all_comments']) is list
+            and len(data['all_comments']) == 1
+            and type(data['all_comments'][0]) is dict
+        )
+        parent = data['all_comments'][0]
+        parent_id = parent['id']
+        self.assertTrue(
+            'comments' in parent
+            and type(parent['comments']) is list
+            and len(parent['comments']) == 0
+        )
+
+        self._test_creating_comment(parent_id)
+
+        response = self.app.get(self._comments_as_tree_url())
+        data = json.loads(response.data)
+        parent = data['all_comments'][0]
+        self.assertTrue(
+            parent['id'] == parent_id
+            and len(parent['comments']) == 1
+            and parent['comments'][0]['id'] == int(self._comment_id)
+            and parent['comments'][0]['parent_id'] == parent_id
+        )
+
+        self._test_deleting_article()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from sqlalchemy.orm import load_only
 from app import db
 from articles.forms import ArticleForm, ArticleCommentForm, ValidationError
 from articles.models import Article, ArticleComment
@@ -65,14 +64,17 @@ def delete_article(article_id):
 
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['GET'])
 def get_all_comments(article_id):
-    comments = []
-    for comment in ArticleComment.query.filter(ArticleComment.article_id == article_id):
-        comments.append(dict(
-            id=comment.id,
-            parent_id=comment.parent_id,
-            name=comment.name
-        ))
-    return jsonify(comments=comments)
+    comments = _fetch_all_comments_for(article_id)
+    return jsonify(all_comments=comments)
+
+
+@articles.route(
+    '/blog/articles/<int:article_id>/comments/as_tree',
+    methods=['GET']
+)
+def get_all_comments_as_tree(article_id):
+    comments = _build_tree_of_comments(article_id)
+    return jsonify(all_comments=comments)
 
 
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['PUT'])
@@ -126,7 +128,6 @@ def get_comment(article_id, comment_id):
         .query
         .filter(ArticleComment.id == comment_id)
         .filter(ArticleComment.article_id == article_id)
-        .order_by(ArticleComment.parent_id, ArticleComment.id)
         .first_or_404()
     )
     return jsonify(
@@ -153,3 +154,32 @@ def delete_comment(article_id, comment_id):
     db.session.delete(comment)
     db.session.commit()
     return jsonify()
+
+
+def _fetch_all_comments_for(article_id):
+    resultset = (
+        ArticleComment
+        .query
+        .filter(ArticleComment.article_id == article_id)
+        .order_by(ArticleComment.parent_id, ArticleComment.id)
+    )
+    comments = []
+    for comment in resultset:
+        parent_id = 0
+        if comment.parent_id is not None:
+            parent_id = comment.parent_id
+        comments.append(dict(
+            id=comment.id,
+            parent_id=parent_id,
+            name=comment.name
+        ))
+    return comments
+
+
+def _build_tree_of_comments(article_id):
+    parent = {0: []}
+    for comment in _fetch_all_comments_for(article_id):
+        comment['comments'] = []
+        parent[comment['id']] = comment['comments']
+        parent[comment['parent_id']].append(comment)
+    return parent[0]
