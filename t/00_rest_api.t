@@ -4,202 +4,131 @@ use Mojo::Base -strict;
 use Test::Mojo;
 use Test::More;
 use FindBin;
-use Storable qw(dclone);
+
+plan tests => 5;
 
 require $FindBin::Bin .'/../rest_api.pl';
 
 my $t = Test::Mojo->new;
 
-#########################################################################################
-## GET /articles/comment ################################################################
-{
-    my $form_hashref = {article_id => 1};
+my ($article_id, $comment_id);
 
-    $t->get_ok('/articles/comment' => form => $form_hashref)
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'GET /blog/articles' => sub {
+    plan tests => 5;
+
+    my $tx = $t->ua->build_tx(GET => _articles_url());
+
+    $t->request_ok($tx)
         ->status_is(200)
-        ->json_is('/status' => 200)
-        ->json_is('/comments' => all_comments());
+        ->content_type_is('application/json;charset=UTF-8');
 
-    my $make_some_bad_decisions = sub {
-        my $callback = shift;
+    my $json = $tx->res->json;
 
-        my $bad_form_hashref = $callback->(dclone $form_hashref);
+    if (ref $json eq 'ARRAY') {
+        pass 'Contains array';
 
-        $t->get_ok('/articles/comment' => form => $bad_form_hashref)
-            ->status_is(422)
-            ->json_is('/status' => 422);
-    };
+        if (@{ $json }) {
+            my $article = $json->[0];
+            ok(
+                ref($article) eq 'HASH'
+                && exists($article->{id})
+                && defined($article->{id})
+                && $article->{id} =~ m{^\d+$}x
+            );
+        }
+        else {
+            pass 'Array is empty';
+        }
+    }
+    else {
+        fail 'Not an array';
+    }
+};
 
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        delete $hashref->{'article_id'};
-        return $hashref;
-    });
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        $hashref->{'article_id'} = 'string';
-        return $hashref;
-    });
-}
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'POST /blog/articles' => sub {
+    plan tests => 4;
 
+    my $form = {name => 'Article name'};
 
-#########################################################################################
-## POST /articles/comment ###############################################################
-{
-    my $form_hashref = {
-        article_id => 1,
-        user_id    => 1,
-        comment    => 'Hello!',
-    };
+    my $tx = $t->ua->build_tx(POST => _articles_url() => json => $form);
 
-    $t->post_ok('/articles/comment' => form => $form_hashref)
+    $t->request_ok($tx)
+        ->status_is(201)
+        ->content_type_is('application/json;charset=UTF-8');
+
+    my $json = $tx->res->json;
+
+    ok(
+        ref($json) eq 'HASH'
+        && exists($json->{id})
+        && defined($json->{id})
+        && $json->{id} =~ m{^\d+$}x
+    );
+
+    $article_id = $json->{id};
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'PUT /blog/articles/:article_id' => sub {
+    plan tests => 4;
+
+    my $form = {name => 'Another name'};
+
+    $t->put_ok(_article_url() => $form)
         ->status_is(200)
-        ->json_is('/status' => 200)
-        ->json_like('/comment_id' => qr{^\d+$}x);
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is({});
+};
 
-    my $make_some_bad_decisions = sub {
-        my $callback = shift;
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'GET /blog/articles/:article_id' => sub {
+    plan tests => 4;
 
-        my $bad_form_hashref = $callback->(dclone $form_hashref);
-
-        $t->post_ok('/articles/comment' => form => $bad_form_hashref)
-            ->status_is(422)
-            ->json_is('/status' => 422);
-    };
-
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        delete $hashref->{'article_id'};
-        return $hashref;
-    });
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        $hashref->{'article_id'} = 'string';
-        return $hashref;
-    });
-
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        delete $hashref->{'user_id'};
-        return $hashref;
-    });
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        $hashref->{'user_id'} = 'string';
-        return $hashref;
-    });
-
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        delete $hashref->{'comment'};
-        return $hashref;
-    });
-
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        $hashref->{'parent_id'} = 'string';
-        return $hashref;
-    });
-}
-
-
-#########################################################################################
-## DELETE /articles/comment #############################################################
-{
-    my $form_hashref = {id => 100500};
-
-    $t->delete_ok('/articles/comment' => form => $form_hashref)
+    $t->get_ok(_article_url())
         ->status_is(200)
-        ->json_is('/status' => 200);
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is('/id' => 42, '/name' => 'Article name');
+};
 
-    my $make_some_bad_decisions = sub {
-        my $callback = shift;
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'DELETE /blog/articles/:article_id' => sub {
+    plan tests => 4;
 
-        my $bad_form_hashref = $callback->(dclone $form_hashref);
+    $t->delete_ok(_article_url())
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is({});
+};
 
-        $t->delete_ok('/articles/comment' => form => $bad_form_hashref)
-            ->status_is(422)
-            ->json_is('/status' => 422)
-    };
-
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        delete $hashref->{'id'};
-        return $hashref;
-    });
-    $make_some_bad_decisions->(sub {
-        my $hashref = shift;
-        $hashref->{'id'} = 'string';
-        return $hashref;
-    });
+#-----------------------------------------------------------------------------------------
+#-- subroutines --------------------------------------------------------------------------
+sub _articles_url {
+    return '/blog/articles'
 }
 
-
-done_testing();
-
-#########################################################################################
-## subroutines ##########################################################################
-sub all_comments {
-    return [
-        {
-            id        => '1',
-            parent_id => '0',
-            user_id   => 1,
-            comment   => 'Hello',
-            comments => [
-                {
-                    id        => '2',
-                    parent_id => '1',
-                    comment   => 'Hello_1_0',
-                    user_id   => 1,
-                    comments  => [
-                        {
-                            id        => '4',
-                            parent_id => '2',
-                            user_id   => 1,
-                            comment   => 'Hello_2_0',
-                            comments  => [],
-                        },
-                        {
-                            id        => '5',
-                            parent_id => '2',
-                            comment   => 'Hello_2_1',
-                            user_id   => 1,
-                            comments  => [],
-                        },
-                    ],
-                },
-                {
-                    id        => '3',
-                    parent_id => '1',
-                    comment   => 'Hello_1_1',
-                    user_id   => 1,
-                    comments  => [
-                        {
-                            id        => '6',
-                            parent_id => '3',
-                            comment   => 'Hello_3_0',
-                            user_id   => 1,
-                            comments  => [],
-                        },
-                        {
-                            id        => '7',
-                            parent_id => '3',
-                            comment   => 'Hello_3_1',
-                            user_id   => 1,
-                            comments  => [],
-                        },
-                    ],
-                },
-            ],
-        },
-        {
-            id        => '8',
-            parent_id => '0',
-            user_id   => 1,
-            comment   => q{Now I'm Here},
-            comments  => [],
-        },
-    ];
+sub _article_url {
+    return sprintf '%s/%d', _articles_url(), $article_id;
 }
+
+sub _comments_url {
+    return sprintf '%s/comments', _article_url();
+}
+
+sub _comments_as_tree_url {
+    return sprintf '%s/comments/as_tree', _article_url();
+}
+
+sub _comment_url {
+    return sprintf '%s/%d', _comments_url(), $comment_id;
+}
+
+#-----------------------------------------------------------------------------------------
+#-- end ----------------------------------------------------------------------------------
 
