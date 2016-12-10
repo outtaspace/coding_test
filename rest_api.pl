@@ -138,6 +138,26 @@ del '/blog/articles/:article_id' => sub {
 };
 
 #-----------------------------------------------------------------------------------------
+#-- /blog/articles/:article_id/comments --------------------------------------------------
+get '/blog/articles/:article_id/comments' => sub {
+    my $self = shift;
+
+    $self->render(json => []);
+};
+
+get '/blog/articles/:article_id/comments/as_tree' => sub {
+    my $self = shift;
+
+    $self->render(json => []);
+};
+
+post '/blog/articles/:article_id/comments' => sub {
+    my $self = shift;
+
+    $self->render(json => {id => 42}, status => 201);
+};
+
+#-----------------------------------------------------------------------------------------
 #-- subroutines --------------------------------------------------------------------------
 sub is_article_exists {
     my ($dbh, $article_id) = @_;

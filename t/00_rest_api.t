@@ -5,7 +5,7 @@ use Test::Mojo;
 use Test::More;
 use FindBin;
 
-plan tests => 5;
+plan tests => 8;
 
 require $FindBin::Bin .'/../rest_api.pl';
 
@@ -105,6 +105,102 @@ subtest 'DELETE /blog/articles/:article_id' => sub {
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'GET /blog/articles/:article_id/comments' => sub {
+    plan tests => 5;
+
+    my $tx = $t->ua->build_tx(GET => _comments_url());
+
+    $t->request_ok($tx)
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8');
+
+    my $json = $tx->res->json;
+
+    if (ref $json eq 'ARRAY') {
+        pass 'Contains array';
+
+        if (@{ $json }) {
+            my $article = $json->[0];
+            ok(
+                ref($article) eq 'HASH'
+                && exists($article->{'id'})
+                && defined($article->{'id'})
+                && $article->{'id'} =~ m{^\d+$}x
+            );
+        }
+        else {
+            pass 'Array is empty';
+        }
+    }
+    else {
+        fail 'Not an array';
+    }
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'GET /blog/articles/:article_id/comments/as_tree' => sub {
+    my $tx = $t->ua->build_tx(GET => _comments_as_tree_url());
+
+    $t->request_ok($tx)
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8');
+
+    my $json = $tx->res->json;
+
+    if (ref $json eq 'ARRAY') {
+        pass 'Contains array';
+
+        if (@{ $json }) {
+            my $article = $json->[0];
+            ok(
+                ref($article) eq 'HASH'
+                && exists($article->{'id'})
+                && defined($article->{'id'})
+                && $article->{'id'} =~ m{^\d+$}x
+            );
+        }
+        else {
+            pass 'Array is empty';
+        }
+    }
+    else {
+        fail 'Not an array';
+    }
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'POST /blog/articles/:article_id/comments' => sub {
+    plan tests => 4;
+
+
+    my $form = {
+        parent_id => 0,
+        name      => 'Comment name',
+        comment   => 'Comment body',
+    };
+
+    my $tx = $t->ua->build_tx(POST => _comments_url() => json => $form);
+
+    $t->request_ok($tx)
+        ->status_is(201)
+        ->content_type_is('application/json;charset=UTF-8');
+
+    my $json = $tx->res->json;
+
+    ok(
+        ref($json) eq 'HASH'
+        && exists($json->{'id'})
+        && defined($json->{'id'})
+        && $json->{'id'} =~ m{^\d+$}x
+    );
+
+    $comment_id = $json->{'id'};
 };
 
 #-----------------------------------------------------------------------------------------
