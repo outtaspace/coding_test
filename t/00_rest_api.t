@@ -33,9 +33,9 @@ subtest 'GET /blog/articles' => sub {
             my $article = $json->[0];
             ok(
                 ref($article) eq 'HASH'
-                && exists($article->{id})
-                && defined($article->{id})
-                && $article->{id} =~ m{^\d+$}x
+                && exists($article->{'id'})
+                && defined($article->{'id'})
+                && $article->{'id'} =~ m{^\d+$}x
             );
         }
         else {
@@ -64,12 +64,12 @@ subtest 'POST /blog/articles' => sub {
 
     ok(
         ref($json) eq 'HASH'
-        && exists($json->{id})
-        && defined($json->{id})
-        && $json->{id} =~ m{^\d+$}x
+        && exists($json->{'id'})
+        && defined($json->{'id'})
+        && $json->{'id'} =~ m{^\d+$}x
     );
 
-    $article_id = $json->{id};
+    $article_id = $json->{'id'};
 };
 
 #-----------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ subtest 'PUT /blog/articles/:article_id' => sub {
 
     my $form = {name => 'Another name'};
 
-    $t->put_ok(_article_url() => $form)
+    $t->put_ok(_article_url() => json => $form)
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
@@ -93,7 +93,7 @@ subtest 'GET /blog/articles/:article_id' => sub {
     $t->get_ok(_article_url())
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
-        ->json_is('/id' => 42, '/name' => 'Article name');
+        ->json_is('/id' => $article_id, '/name' => 'Another name');
 };
 
 #-----------------------------------------------------------------------------------------
