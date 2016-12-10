@@ -5,7 +5,7 @@ use Test::Mojo;
 use Test::More;
 use FindBin;
 
-plan tests => 8;
+plan tests => 10;
 
 require $FindBin::Bin .'/../rest_api.pl';
 
@@ -109,6 +109,8 @@ subtest 'DELETE /blog/articles/:article_id' => sub {
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
+_create_article();
+
 subtest 'GET /blog/articles/:article_id/comments' => sub {
     plan tests => 5;
 
@@ -130,6 +132,9 @@ subtest 'GET /blog/articles/:article_id/comments' => sub {
                 && exists($article->{'id'})
                 && defined($article->{'id'})
                 && $article->{'id'} =~ m{^\d+$}x
+                && exists($article->{'parent_id'})
+                && defined($article->{'parent_id'})
+                && $article->{'parent_id'} =~ m{^\d+$}x
             );
         }
         else {
@@ -162,6 +167,9 @@ subtest 'GET /blog/articles/:article_id/comments/as_tree' => sub {
                 && exists($article->{'id'})
                 && defined($article->{'id'})
                 && $article->{'id'} =~ m{^\d+$}x
+                && exists($article->{'parent_id'})
+                && defined($article->{'parent_id'})
+                && $article->{'parent_id'} =~ m{^\d+$}x
             );
         }
         else {
@@ -203,6 +211,8 @@ subtest 'POST /blog/articles/:article_id/comments' => sub {
     $comment_id = $json->{'id'};
 };
 
+_delete_article();
+
 #-----------------------------------------------------------------------------------------
 #-- subroutines --------------------------------------------------------------------------
 sub _articles_url {
@@ -223,6 +233,26 @@ sub _comments_as_tree_url {
 
 sub _comment_url {
     return sprintf '%s/%d', _comments_url(), $comment_id;
+}
+
+sub _create_article {
+    my $form = {name => 'Article name'};
+
+    my $tx = $t->ua->build_tx(POST => _articles_url() => json => $form);
+    $t->request_ok($tx);
+
+    my $json = $tx->res->json;
+
+    $article_id = $json->{'id'};
+}
+
+sub _delete_article {
+    my $form = {name => 'Article name'};
+
+    my $tx = $t->ua->build_tx(DELETE => _article_url());
+    $t->request_ok($tx);
+
+    undef $article_id;
 }
 
 #-----------------------------------------------------------------------------------------

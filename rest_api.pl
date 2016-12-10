@@ -142,11 +142,41 @@ del '/blog/articles/:article_id' => sub {
 get '/blog/articles/:article_id/comments' => sub {
     my $self = shift;
 
-    $self->render(json => []);
+    my $article_id = $self->param('article_id');
+
+    my $dbh = $self->app->dbh;
+    $dbh->begin_work;
+
+    if (is_article_exists($dbh, $article_id)) {
+        my $comments = _fetch_all_comments_for($dbh, $article_id);
+
+        $dbh->commit;
+        $self->render(json => $comments);
+    }
+    else {
+        $dbh->rollback;
+        return $self->reply->not_found;
+    }
 };
 
 get '/blog/articles/:article_id/comments/as_tree' => sub {
     my $self = shift;
+
+    my $article_id = $self->param('article_id');
+
+    my $dbh = $self->app->dbh;
+    $dbh->begin_work;
+
+    if (is_article_exists($dbh, $article_id)) {
+        my $comments = _build_tree_of_comments($dbh, $article_id);
+
+        $dbh->commit;
+        $self->render(json => $comments);
+    }
+    else {
+        $dbh->rollback;
+        return $self->reply->not_found;
+    }
 
     $self->render(json => []);
 };
@@ -167,6 +197,39 @@ sub is_article_exists {
             select a.* from articles as a where a.id=?
         )
     }, undef, $article_id);
+}
+
+sub _fetch_all_comments_for {
+    my ($dbh, $article_id) = @_;
+
+    return $dbh->selectall_arrayref(q{
+        select
+            ac.id,
+            ac.parent_id
+        from
+            article_comments as ac
+        where
+            ac.article_id=?
+    }, {Slice => {}}, $article_id);
+}
+
+sub _build_tree_of_comments {
+    my ($dbh, $article_id) = @_;
+
+    my %parent = (0 => []);
+
+    for my $each_comment (@{ _fetch_all_comments_for($dbh, $article_id) }) {
+        my $id        = $each_comment->{'id'};
+        my $parent_id = $each_comment->{'parent_id'} // 0;
+
+        $each_comment->{'comments'} = [];
+
+        $parent{$id} = $each_comment->{'comments'};
+
+        push @{ $parent{$parent_id} }, $each_comment;
+    }
+
+    return $parent{0};
 }
 
 #-----------------------------------------------------------------------------------------
