@@ -177,14 +177,41 @@ get '/blog/articles/:article_id/comments/as_tree' => sub {
         $dbh->rollback;
         return $self->reply->not_found;
     }
-
-    $self->render(json => []);
 };
 
 post '/blog/articles/:article_id/comments' => sub {
     my $self = shift;
 
-    $self->render(json => {id => 42}, status => 201);
+    my $json = $self->req->json;
+
+    my $article_id = $self->param('article_id');
+    my $parent_id  = $json->{'parent_id'};
+    my $name       = $json->{'name'};
+    my $comment    = $json->{'comment'};
+
+    my $dbh = $self->app->dbh;
+    $dbh->begin_work;
+
+    if (is_article_exists($dbh, $article_id)) {
+        $dbh->do(q{
+            insert into article_comments (
+                article_id,
+                parent_id,
+                name,
+                `comment`
+            )
+            values (?, ?, ?, ?)
+        }, undef, $article_id, $parent_id, $name, $comment);
+
+        my $comment_id = $dbh->selectrow_array(q{select last_insert_id()});
+
+        $dbh->commit;
+        $self->render(json => {id => $comment_id}, status => 201);
+    }
+    else {
+        $dbh->rollback;
+        return $self->reply->not_found;
+    }
 };
 
 #-----------------------------------------------------------------------------------------
