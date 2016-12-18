@@ -292,8 +292,8 @@ del '/blog/articles/:article_id/comments/:comment_id' => sub {
 
     if (is_comment_exists($dbh, $article_id, $comment_id)) {
         $dbh->do(q{
-			delete from
-				article_comments
+            delete from
+                article_comments
             where
                 article_id=? and id=?
         }, undef, $article_id, $comment_id);
