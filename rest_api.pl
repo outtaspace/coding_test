@@ -215,15 +215,128 @@ post '/blog/articles/:article_id/comments' => sub {
 };
 
 #-----------------------------------------------------------------------------------------
+#-- /blog/articles/:article_id/comments/:comment_id --------------------------------------
+get '/blog/articles/:article_id/comments/:comment_id' => sub {
+    my $self = shift;
+
+    my $article_id = $self->param('article_id');
+    my $comment_id = $self->param('comment_id');
+
+    my $comment = $self->app->dbh->selectrow_hashref(q{
+        select
+            ac.id,
+            ac.article_id,
+            ifnull(ac.parent_id, 0) as parent_id,
+            ac.name,
+            ac.comment
+        from
+            article_comments as ac
+        where
+            ac.article_id = ? and ac.id=?
+    }, undef, $article_id, $comment_id);
+
+    if ($comment) {
+        $self->render(json => $comment);
+    }
+    else {
+        return $self->reply->not_found;
+    }
+};
+
+put '/blog/articles/:article_id/comments/:comment_id' => sub {
+    my $self = shift;
+
+    my $article_id = $self->param('article_id');
+    my $comment_id = $self->param('comment_id');
+
+    my ($parent_id, $name, $comment);
+    {
+        my $json = $self->req->json;
+        $parent_id = $json->{'parent_id'};
+        $name      = $json->{'name'};
+        $comment   = $json->{'comment'};
+    }
+
+    my $dbh = $self->app->dbh;
+    $dbh->begin_work;
+
+    if (is_comment_exists($dbh, $article_id, $comment_id)) {
+        $dbh->do(q{
+            update
+                article_comments as ac
+            set
+                ac.parent_id=?,
+                ac.name=?,
+                ac.comment=?
+            where
+                ac.article_id=? and ac.id=?
+        }, undef, $parent_id, $name, $comment, $article_id, $comment_id);
+
+        $dbh->commit;
+        $self->render(json => {});
+    }
+    else {
+        $dbh->rollback;
+        return $self->reply->not_found;
+    }
+};
+
+del '/blog/articles/:article_id/comments/:comment_id' => sub {
+    my $self = shift;
+
+    my $article_id = $self->param('article_id');
+    my $comment_id = $self->param('comment_id');
+
+    my $dbh = $self->app->dbh;
+    $dbh->begin_work;
+
+    if (is_comment_exists($dbh, $article_id, $comment_id)) {
+        $dbh->do(q{
+			delete from
+				article_comments
+            where
+                article_id=? and id=?
+        }, undef, $article_id, $comment_id);
+
+        $dbh->commit;
+        $self->render(json => {});
+    }
+    else {
+        $dbh->rollback;
+        return $self->reply->not_found;
+    }
+};
+
+#-----------------------------------------------------------------------------------------
 #-- subroutines --------------------------------------------------------------------------
 sub is_article_exists {
     my ($dbh, $article_id) = @_;
 
     return int $dbh->selectrow_array(q{
         select exists(
-            select a.* from articles as a where a.id=?
+            select
+                a.*
+            from
+                articles as a
+            where
+                a.id=?
         )
     }, undef, $article_id);
+}
+
+sub is_comment_exists {
+    my ($dbh, $article_id, $comment_id) = @_;
+
+    return int $dbh->selectrow_array(q{
+        select exists (
+            select
+                ac.*
+            from
+                article_comments as ac
+            where
+                ac.article_id=? and ac.id=?
+        )
+    }, undef, $article_id, $comment_id);
 }
 
 sub _fetch_all_comments_for {

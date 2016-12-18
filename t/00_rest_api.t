@@ -5,7 +5,7 @@ use Test::Mojo;
 use Test::More;
 use FindBin;
 
-plan tests => 10;
+plan tests => 13;
 
 require $FindBin::Bin .'/../rest_api.pl';
 
@@ -186,7 +186,6 @@ subtest 'GET /blog/articles/:article_id/comments/as_tree' => sub {
 subtest 'POST /blog/articles/:article_id/comments' => sub {
     plan tests => 4;
 
-
     my $form = {
         parent_id => 0,
         name      => 'Comment name',
@@ -211,6 +210,51 @@ subtest 'POST /blog/articles/:article_id/comments' => sub {
     $comment_id = $json->{'id'};
 };
 
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'GET /blog/articles/:article_id/comments/:comment_id' => sub {
+    plan tests => 8;
+
+    $t->get_ok(_comment_url())
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is('/id' => $comment_id)
+        ->json_is('/article_id' => $article_id)
+        ->json_is('/parent_id' => 0)
+        ->json_is('/name' => 'Comment name')
+        ->json_is('/comment' => 'Comment body');
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
+    plan tests => 4;
+
+    my $form = {
+        parent_id => 0,
+        name      => 'Another comment name',
+        comment   => 'Another comment body',
+    };
+
+    $t->put_ok(_comment_url() => json => $form)
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is({});
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+subtest 'DELETE /blog/articles/:article_id/comments/:comment_id' => sub {
+    plan tests => 4;
+
+    $t->delete_ok(_comment_url())
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8')
+        ->json_is({});
+};
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
 _delete_article();
 
 #-----------------------------------------------------------------------------------------
