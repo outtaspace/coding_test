@@ -60,28 +60,17 @@ put '/blog/articles/:article_id' => sub {
     my $article_id   = $self->param('article_id');
     my $article_name = $self->req->json->{'name'};
 
-    $self->render(json => {});
+    my $rows_affected = rows_affected($self->app->dbh->do(q{
+        update
+            articles as a
+        set
+            a.name=?
+        where
+            a.id=?
+    }, undef, $article_name, $article_id));
 
-    my $dbh = $self->app->dbh;
-    $dbh->begin_work;
-
-    if (is_article_exists($dbh, $article_id)) {
-        $dbh->do(q{
-            update
-                articles
-            set
-                name=?
-            where
-                id=?
-        }, undef, $article_name, $article_id);
-
-        $dbh->commit;
-        return $self->render(json => {});
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    return $rows_affected
+        ? $self->render(json => {}) : $self->reply->not_found;
 };
 
 get '/blog/articles/:article_id' => sub {
@@ -89,27 +78,18 @@ get '/blog/articles/:article_id' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $dbh = $self->app->dbh;
-    $dbh->begin_work;
+    my $article = $self->app->dbh->selectrow_hashref(q{
+        select
+            a.id,
+            a.name
+        from
+            articles as a
+        where
+            a.id=?
+    }, undef, $article_id);
 
-    if (is_article_exists($dbh, $article_id)) {
-        my $article = $dbh->selectrow_hashref(q{
-            select
-                a.id,
-                a.name
-            from
-                articles as a
-            where
-                a.id=?
-        }, undef, $article_id);
-
-        $dbh->commit;
-        $self->render(json => $article);
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    return $article
+        ? $self->render(json => $article) : $self->reply->not_found;
 };
 
 del '/blog/articles/:article_id' => sub {
@@ -117,24 +97,15 @@ del '/blog/articles/:article_id' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $dbh = $self->app->dbh;
-    $dbh->begin_work;
+    my $rows_affected = rows_affected($self->app->dbh->do(q{
+        delete from
+            articles
+        where
+            id=?
+    }, undef, $article_id));
 
-    if (is_article_exists($dbh, $article_id)) {
-        $self->app->dbh->do(q{
-            delete from
-                articles
-            where
-                id=?
-        }, undef, $article_id);
-
-        $dbh->commit;
-        $self->render(json => {});
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    return $rows_affected
+        ? $self->render(json => {}) : $self->reply->not_found;
 };
 
 #-----------------------------------------------------------------------------------------
@@ -147,16 +118,15 @@ get '/blog/articles/:article_id/comments' => sub {
     my $dbh = $self->app->dbh;
     $dbh->begin_work;
 
+    my $comments;
     if (is_article_exists($dbh, $article_id)) {
-        my $comments = _fetch_all_comments_for($dbh, $article_id);
+        $comments = _fetch_all_comments_for($dbh, $article_id);
+    }
 
-        $dbh->commit;
-        $self->render(json => $comments);
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    $dbh->commit;
+
+    return $comments
+        ? $self->render(json => $comments) : $self->reply->not_found;
 };
 
 get '/blog/articles/:article_id/comments/as_tree' => sub {
@@ -167,16 +137,15 @@ get '/blog/articles/:article_id/comments/as_tree' => sub {
     my $dbh = $self->app->dbh;
     $dbh->begin_work;
 
+    my $comments;
     if (is_article_exists($dbh, $article_id)) {
-        my $comments = _build_tree_of_comments($dbh, $article_id);
+        $comments = _build_tree_of_comments($dbh, $article_id);
+    }
 
-        $dbh->commit;
-        $self->render(json => $comments);
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    $dbh->commit;
+
+    return $comments
+        ? $self->render(json => $comments) : $self->reply->not_found;
 };
 
 post '/blog/articles/:article_id/comments' => sub {
@@ -192,6 +161,7 @@ post '/blog/articles/:article_id/comments' => sub {
     my $dbh = $self->app->dbh;
     $dbh->begin_work;
 
+    my $comment_id;
     if (is_article_exists($dbh, $article_id)) {
         $dbh->do(q{
             insert into article_comments (
@@ -203,13 +173,15 @@ post '/blog/articles/:article_id/comments' => sub {
             values (?, ?, ?, ?)
         }, undef, $article_id, $parent_id, $name, $comment);
 
-        my $comment_id = $dbh->selectrow_array(q{select last_insert_id()});
+        $comment_id = $dbh->selectrow_array(q{select last_insert_id()});
+    }
 
-        $dbh->commit;
-        $self->render(json => {id => $comment_id}, status => 201);
+    $dbh->commit;
+
+    if ($comment_id) {
+        return $self->render(json => {id => $comment_id}, status => 201);
     }
     else {
-        $dbh->rollback;
         return $self->reply->not_found;
     }
 };
@@ -226,21 +198,17 @@ get '/blog/articles/:article_id/comments/:comment_id' => sub {
         select
             ac.id,
             ac.article_id,
-            ifnull(ac.parent_id, 0) as parent_id,
+            ac.parent_id,
             ac.name,
             ac.comment
         from
             article_comments as ac
         where
-            ac.article_id = ? and ac.id=?
+            ac.article_id=? and ac.id=?
     }, undef, $article_id, $comment_id);
 
-    if ($comment) {
-        $self->render(json => $comment);
-    }
-    else {
-        return $self->reply->not_found;
-    }
+    return $comment
+        ? $self->render(json => $comment) : $self->reply->not_found;
 };
 
 put '/blog/articles/:article_id/comments/:comment_id' => sub {
@@ -257,28 +225,19 @@ put '/blog/articles/:article_id/comments/:comment_id' => sub {
         $comment   = $json->{'comment'};
     }
 
-    my $dbh = $self->app->dbh;
-    $dbh->begin_work;
+    my $rows_affected = rows_affected($self->app->dbh->do(q{
+        update
+            article_comments as ac
+        set
+            ac.parent_id=?,
+            ac.name=?,
+            ac.comment=?
+        where
+            ac.article_id=? and ac.id=?
+    }, undef, $parent_id, $name, $comment, $article_id, $comment_id));
 
-    if (is_comment_exists($dbh, $article_id, $comment_id)) {
-        $dbh->do(q{
-            update
-                article_comments as ac
-            set
-                ac.parent_id=?,
-                ac.name=?,
-                ac.comment=?
-            where
-                ac.article_id=? and ac.id=?
-        }, undef, $parent_id, $name, $comment, $article_id, $comment_id);
-
-        $dbh->commit;
-        $self->render(json => {});
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    return $rows_affected
+        ? $self->render(json => {}) : $self->reply->not_found;
 };
 
 del '/blog/articles/:article_id/comments/:comment_id' => sub {
@@ -287,28 +246,25 @@ del '/blog/articles/:article_id/comments/:comment_id' => sub {
     my $article_id = $self->param('article_id');
     my $comment_id = $self->param('comment_id');
 
-    my $dbh = $self->app->dbh;
-    $dbh->begin_work;
+    my $rows_affected = rows_affected($self->app->dbh->do(q{
+        delete from
+            article_comments
+        where
+            article_id=? and id=?
+    }, undef, $article_id, $comment_id));
 
-    if (is_comment_exists($dbh, $article_id, $comment_id)) {
-        $dbh->do(q{
-            delete from
-                article_comments
-            where
-                article_id=? and id=?
-        }, undef, $article_id, $comment_id);
-
-        $dbh->commit;
-        $self->render(json => {});
-    }
-    else {
-        $dbh->rollback;
-        return $self->reply->not_found;
-    }
+    return $rows_affected
+        ? $self->render(json => {}) : $self->reply->not_found;
 };
 
 #-----------------------------------------------------------------------------------------
 #-- subroutines --------------------------------------------------------------------------
+sub rows_affected {
+    my $rows_affected = shift;
+
+    return $rows_affected eq q{0E0} ? 0 : 1;
+}
+
 sub is_article_exists {
     my ($dbh, $article_id) = @_;
 
@@ -322,21 +278,6 @@ sub is_article_exists {
                 a.id=?
         )
     }, undef, $article_id);
-}
-
-sub is_comment_exists {
-    my ($dbh, $article_id, $comment_id) = @_;
-
-    return int $dbh->selectrow_array(q{
-        select exists (
-            select
-                ac.*
-            from
-                article_comments as ac
-            where
-                ac.article_id=? and ac.id=?
-        )
-    }, undef, $article_id, $comment_id);
 }
 
 sub _fetch_all_comments_for {

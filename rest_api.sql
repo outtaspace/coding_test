@@ -12,7 +12,7 @@ create table `articles` (
 create table `article_comments` (
     `id` integer not null auto_increment,
     `article_id` integer not null,
-    `parent_id` integer null default null,
+    `parent_id` integer null default 0,
     `name` varchar(255) not null,
     `comment` text not null,
     primary key (`id`),
