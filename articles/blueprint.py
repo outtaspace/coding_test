@@ -1,6 +1,7 @@
-from flask import Blueprint, request, jsonify
 from app import db
-from articles.forms import ArticleForm, ArticleCommentForm, ValidationError
+from flask import Blueprint, jsonify, request
+
+from articles.forms import ArticleCommentForm, ArticleForm, ValidationError
 from articles.models import Article, ArticleComment
 
 
@@ -84,7 +85,7 @@ def create_comment(article_id):
         raise ValidationError(form.errors)
     comment = ArticleComment()
     comment.article_id = article_id
-    if 'parent_id' in form.data and type(form.data['parent_id']) is int:
+    if 'parent_id' in form.data and isinstance(form.data['parent_id'], int):
         comment.parent_id = form.data['parent_id']
     comment.name = form.data['name']
     comment.comment = form.data['comment']
@@ -109,7 +110,7 @@ def update_comment(article_id, comment_id):
         .first_or_404()
     )
     comment.article_id = article_id
-    if 'parent_id' in form.data and type(form.data['parent_id']) is int:
+    if 'parent_id' in form.data and isinstance(form.data['parent_id'], int):
         comment.parent_id = form.data['parent_id']
     comment.name = form.data['name']
     comment.comment = form.data['comment']

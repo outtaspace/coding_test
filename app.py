@@ -1,8 +1,9 @@
+import os
+
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
-import os
+from flask_sqlalchemy import SQLAlchemy
 
 
 def configure(app):
@@ -26,6 +27,5 @@ migrate = Migrate(app, db)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
-
-from articles.blueprint import articles
+from articles.blueprint import articles # noqa
 app.register_blueprint(articles)

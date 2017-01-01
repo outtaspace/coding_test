@@ -1,6 +1,7 @@
 import unittest
-from flask import json
+
 from app import app
+from flask import json
 
 
 class BlogAPITest(unittest.TestCase):
@@ -14,16 +15,26 @@ class BlogAPITest(unittest.TestCase):
         return '/blog/articles'
 
     def _article_url(self):
-        return '{}/{}'.format(self._articles_url(), self._article_id)
+        return '{articles_url}/{article_id}'.format(
+            articles_url=self._articles_url(),
+            article_id=self._article_id
+        )
 
     def _comments_url(self):
-        return '{}/comments'.format(self._article_url())
+        return '{article_url}/comments'.format(
+            article_url=self._article_url()
+        )
 
     def _comments_as_tree_url(self):
-        return '{}/comments/as_tree'.format(self._article_url())
+        return '{article_url}/comments/as_tree'.format(
+            article_url=self._article_url()
+        )
 
     def _comment_url(self):
-        return '{}/{}'.format(self._comments_url(), self._comment_id)
+        return '{comments_url}/{comment_id}'.format(
+            comments_url=self._comments_url(),
+            comment_id=self._comment_id
+        )
 
     def test_getting_all_articles(self):
         response = self.app.get(self._articles_url())
@@ -32,11 +43,9 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'application/json')
 
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'articles' in data
-            and type(data['articles']) is list
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('articles' in data)
+        self.assertTrue(isinstance(data['articles'], list))
 
     def _test_creating_article(self):
         response = self.app.put(
@@ -48,11 +57,9 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'application/json')
 
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'id' in data
-            and type(data['id']) is int
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('id' in data)
+        self.assertTrue(isinstance(data['id'], int))
         self._article_id = str(data['id'])
 
     def _test_updating_article(self):
@@ -105,11 +112,9 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'application/json')
 
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'id' in data
-            and type(data['id']) is int
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('id' in data)
+        self.assertTrue(isinstance(data['id'], int))
         self._comment_id = str(data['id'])
 
     def _test_updating_comment(self):
@@ -165,11 +170,9 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'application/json')
 
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'all_comments' in data
-            and type(data['all_comments']) is list
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('all_comments' in data)
+        self.assertTrue(isinstance(data['all_comments'], list))
 
         self._test_deleting_article()
 
@@ -189,44 +192,37 @@ class BlogAPITest(unittest.TestCase):
         response = self.app.get(self._comments_as_tree_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
+
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'all_comments' in data
-            and type(data['all_comments']) is list
-            and len(data['all_comments']) == 0
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('all_comments' in data)
+        self.assertTrue(isinstance(data['all_comments'], list))
+        self.assertTrue(len(data['all_comments']) == 0)
 
         self._test_creating_comment()
 
         response = self.app.get(self._comments_as_tree_url())
         data = json.loads(response.data)
-        self.assertTrue(
-            type(data) is dict
-            and 'all_comments' in data
-            and type(data['all_comments']) is list
-            and len(data['all_comments']) == 1
-            and type(data['all_comments'][0]) is dict
-        )
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('all_comments' in data)
+        self.assertTrue(isinstance(data['all_comments'], list))
+        self.assertTrue(len(data['all_comments']) == 1)
+        self.assertTrue(isinstance(data['all_comments'][0], dict))
         parent = data['all_comments'][0]
         parent_id = parent['id']
-        self.assertTrue(
-            'comments' in parent
-            and type(parent['comments']) is list
-            and len(parent['comments']) == 0
-        )
+        self.assertTrue('comments' in parent)
+        self.assertTrue(isinstance(parent['comments'], list))
+        self.assertTrue(len(parent['comments']) == 0)
 
         self._test_creating_comment(parent_id)
 
         response = self.app.get(self._comments_as_tree_url())
         data = json.loads(response.data)
         parent = data['all_comments'][0]
-        self.assertTrue(
-            parent['id'] == parent_id
-            and len(parent['comments']) == 1
-            and parent['comments'][0]['id'] == int(self._comment_id)
-            and parent['comments'][0]['parent_id'] == parent_id
-        )
+        self.assertTrue(parent['id'] == parent_id)
+        self.assertTrue(len(parent['comments']) == 1)
+        self.assertTrue(parent['comments'][0]['id'] == int(self._comment_id))
+        self.assertTrue(parent['comments'][0]['parent_id'] == parent_id)
 
         self._test_deleting_article()
 

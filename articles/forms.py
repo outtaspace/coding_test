@@ -1,18 +1,18 @@
 import wtforms
-import wtforms_json
 from wtforms import validators
+import wtforms_json
 
 
 wtforms_json.init()
 
 
 class ArticleForm(wtforms.Form):
-    id = wtforms.IntegerField('id', validators=[validators.Optional()])
+    id = wtforms.IntegerField('id', validators=[validators.Optional()]) # noqa
     name = wtforms.StringField('name', validators=[validators.DataRequired()])
 
 
 class ArticleCommentForm(wtforms.Form):
-    id = wtforms.IntegerField('id', validators=[validators.Optional()])
+    id = wtforms.IntegerField('id', validators=[validators.Optional()]) # noqa
     parent_id = wtforms.IntegerField('parent_id', validators=[
         validators.Optional()
     ])

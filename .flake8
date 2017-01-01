@@ -1,5 +1,5 @@
 [flake8]
-exclude = .git,__pycache__,.flake8,requrements.txt
+exclude = .git,__pycache__,.flake8,requrements.txt,migrations
 
 application-import-names = articles
 import-order-style = google
