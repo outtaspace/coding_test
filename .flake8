@@ -1,0 +1,9 @@
+[flake8]
+exclude = .git,__pycache__,.flake8,requrements.txt
+
+application-import-names = articles
+import-order-style = google
+
+inline-quotes = '
+
+ignore = D100,D101,D102,D103,D105
