@@ -6,3 +6,4 @@ lib
 local
 __pycache__
 migrations
+tags
