@@ -142,7 +142,7 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(data, dict(
             id=int(self._comment_id),
             article_id=int(self._article_id),
-            parent_id=None,
+            parent_id=0,
             name='Another subject',
             comment='Another comment'
         ))

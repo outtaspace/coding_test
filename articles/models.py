@@ -6,7 +6,12 @@ class Article(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)  # noqa
     name = db.Column(db.String(255), nullable=False)
-    comment = db.relationship('ArticleComment', cascade='all, delete-orphan')
+
+    comments = db.relationship(
+        'ArticleComment',
+        backref='articles',
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return '<Article id={id}>'.format(id=self.id)
@@ -18,10 +23,14 @@ class ArticleComment(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # noqa
     article_id = db.Column(
         db.Integer,
-        db.ForeignKey('articles.id'),
+        db.ForeignKey('articles.id', ondelete='CASCADE'),
         nullable=False
     )
-    parent_id = db.Column(db.Integer)
+    parent_id = db.Column(
+        db.Integer,
+        nullable=False,
+        server_default='0'
+    )
     name = db.Column(db.String(255), nullable=False)
     comment = db.Column(db.Text, nullable=False)
 
