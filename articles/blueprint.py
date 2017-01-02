@@ -23,7 +23,7 @@ def get_all_articles():
     return jsonify(articles=articles)
 
 
-@articles.route('/blog/articles', methods=['PUT'])
+@articles.route('/blog/articles', methods=['POST'])
 def create_article():
     form = ArticleForm.from_json(request.get_json())
     if not form.validate():
@@ -35,7 +35,7 @@ def create_article():
     return jsonify(id=article.id), 201
 
 
-@articles.route('/blog/articles/<int:article_id>', methods=['POST'])
+@articles.route('/blog/articles/<int:article_id>', methods=['PUT'])
 def update_article(article_id):
     form = ArticleForm.from_json(request.get_json())
     if not form.validate():
@@ -78,7 +78,7 @@ def get_all_comments_as_tree(article_id):
     return jsonify(all_comments=comments)
 
 
-@articles.route('/blog/articles/<int:article_id>/comments', methods=['PUT'])
+@articles.route('/blog/articles/<int:article_id>/comments', methods=['POST'])
 def create_comment(article_id):
     form = ArticleCommentForm.from_json(request.get_json())
     if not form.validate():
@@ -96,7 +96,7 @@ def create_comment(article_id):
 
 @articles.route(
     '/blog/articles/<int:article_id>/comments/<int:comment_id>',
-    methods=['POST']
+    methods=['PUT']
 )
 def update_comment(article_id, comment_id):
     form = ArticleCommentForm.from_json(request.get_json())

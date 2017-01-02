@@ -48,7 +48,7 @@ class BlogAPITest(unittest.TestCase):
         self.assertTrue(isinstance(data['articles'], list))
 
     def _test_creating_article(self):
-        response = self.app.put(
+        response = self.app.post(
             self._articles_url(),
             data=json.dumps(dict(name='Article name')),
             content_type='application/json'
@@ -63,7 +63,7 @@ class BlogAPITest(unittest.TestCase):
         self._article_id = str(data['id'])
 
     def _test_updating_article(self):
-        response = self.app.post(
+        response = self.app.put(
             self._article_url(),
             data=json.dumps(dict(name='Another name')),
             content_type='application/json'
@@ -98,7 +98,7 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.content_type, 'text/html')
 
     def _test_creating_comment(self, parent_id=None):
-        response = self.app.put(
+        response = self.app.post(
             self._comments_url(),
             data=json.dumps(dict(
                 name='Subject',
@@ -118,7 +118,7 @@ class BlogAPITest(unittest.TestCase):
         self._comment_id = str(data['id'])
 
     def _test_updating_comment(self):
-        response = self.app.post(
+        response = self.app.put(
             self._comment_url(),
             data=json.dumps(dict(
                 name='Another subject',
