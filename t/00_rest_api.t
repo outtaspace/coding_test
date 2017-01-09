@@ -111,7 +111,7 @@ subtest 'foreign key' => sub {
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
-    plan tests => 14;
+    plan tests => 13;
 
     my $article = create_article();
 
@@ -120,9 +120,8 @@ subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
     $comment = get_comment($comment);
 
     my $form = {
-        parent_id => 0,
-        name      => 'Another comment name',
-        comment   => 'Another comment body',
+        name    => 'Another comment name',
+        comment => 'Another comment body',
     };
 
     $t->put_ok($comment->comment_url, json => $form)
@@ -136,9 +135,8 @@ subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
 
     is $updated->comment_id, $comment->comment_id;
 
-    is $updated->parent_id,  $form->{'parent_id'};
-    is $updated->name,       $form->{'name'};
-    is $updated->comment,    $form->{'comment'};
+    is $updated->name,    $form->{'name'};
+    is $updated->comment, $form->{'comment'};
 
     delete_article($article);
 };

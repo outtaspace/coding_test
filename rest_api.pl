@@ -217,24 +217,22 @@ put '/blog/articles/:article_id/comments/:comment_id' => sub {
     my $article_id = $self->param('article_id');
     my $comment_id = $self->param('comment_id');
 
-    my ($parent_id, $name, $comment);
+    my ($name, $comment);
     {
         my $json = $self->req->json;
-        $parent_id = $json->{'parent_id'};
-        $name      = $json->{'name'};
-        $comment   = $json->{'comment'};
+        $name    = $json->{'name'};
+        $comment = $json->{'comment'};
     }
 
     my $rows_affected = rows_affected($self->app->dbh->do(q{
         update
             article_comments as ac
         set
-            ac.parent_id=?,
             ac.name=?,
             ac.comment=?
         where
             ac.article_id=? and ac.id=?
-    }, undef, $parent_id, $name, $comment, $article_id, $comment_id));
+    }, undef, $name, $comment, $article_id, $comment_id));
 
     return $rows_affected
         ? $self->render(json => {}) : $self->reply->not_found;
