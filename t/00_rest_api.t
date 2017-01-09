@@ -1,13 +1,16 @@
 #!/usr/bin/perl
 
 use Mojo::Base -strict;
+use lib::abs qw(../lib);
 use Test::Mojo;
 use Test::More;
-use FindBin;
 
-plan tests => 13;
+use TestArticle;
+use TestArticleComments;
 
-require $FindBin::Bin .'/../rest_api.pl';
+plan tests => 14;
+
+require (lib::abs::path('../rest_api.pl'));
 
 my $t = Test::Mojo->new;
 
@@ -18,7 +21,7 @@ my ($article_id, $comment_id);
 subtest 'GET /blog/articles' => sub {
     plan tests => 5;
 
-    my $tx = $t->ua->build_tx(GET => _articles_url());
+    my $tx = $t->ua->build_tx(GET => TestArticle->articles_url);
 
     $t->request_ok($tx)
         ->status_is(200)
@@ -49,186 +52,73 @@ subtest 'GET /blog/articles' => sub {
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
-subtest 'POST /blog/articles' => sub {
-    plan tests => 4;
+{
+    my $article = create_article();
 
-    my $form = {name => 'Article name'};
+    $article = get_article($article);
 
-    my $tx = $t->ua->build_tx(POST => _articles_url() => json => $form);
-
-    $t->request_ok($tx)
-        ->status_is(201)
-        ->content_type_is('application/json;charset=UTF-8');
-
-    my $json = $tx->res->json;
-
-    ok(
-        ref($json) eq 'HASH'
-        && exists($json->{'id'})
-        && defined($json->{'id'})
-        && $json->{'id'} =~ m{^\d+$}x
-    );
-
-    $article_id = $json->{'id'};
-};
+    delete_article($article);
+}
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 subtest 'PUT /blog/articles/:article_id' => sub {
-    plan tests => 4;
+    plan tests => 9;
+
+    my $article = create_article();
 
     my $form = {name => 'Another name'};
 
-    $t->put_ok(_article_url() => json => $form)
+    $t->put_ok($article->article_url, json => $form)
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
+
+    my $updated = get_article($article);
+
+    is $updated->article_id, $article->article_id;
+    is $updated->name,       $form->{'name'};
+
+    delete_article($article);
 };
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
-subtest 'GET /blog/articles/:article_id' => sub {
-    plan tests => 4;
+{
+    my $article = create_article();
 
-    $t->get_ok(_article_url())
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8')
-        ->json_is('/id' => $article_id, '/name' => 'Another name');
-};
+    my $comment = create_comment($article, {});
 
-#-----------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------
-subtest 'DELETE /blog/articles/:article_id' => sub {
-    plan tests => 4;
+    $comment = get_comment($comment);
 
-    $t->delete_ok(_article_url())
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8')
-        ->json_is({});
-};
+    delete_comment($comment);
+    delete_article($article);
+}
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
-_create_article();
-
-subtest 'GET /blog/articles/:article_id/comments' => sub {
+subtest 'foreign key' => sub {
     plan tests => 5;
 
-    my $tx = $t->ua->build_tx(GET => _comments_url());
+    my $article = create_article();
 
-    $t->request_ok($tx)
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8');
+    my $comment = create_comment($article, {});
 
-    my $json = $tx->res->json;
+    delete_article($article);
 
-    if (ref $json eq 'ARRAY') {
-        pass 'Contains array';
-
-        if (@{ $json }) {
-            my $article = $json->[0];
-            ok(
-                ref($article) eq 'HASH'
-                && exists($article->{'id'})
-                && defined($article->{'id'})
-                && $article->{'id'} =~ m{^\d+$}x
-                && exists($article->{'parent_id'})
-                && defined($article->{'parent_id'})
-                && $article->{'parent_id'} =~ m{^\d+$}x
-            );
-        }
-        else {
-            pass 'Array is empty';
-        }
-    }
-    else {
-        fail 'Not an array';
-    }
-};
-
-#-----------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------
-subtest 'GET /blog/articles/:article_id/comments/as_tree' => sub {
-    my $tx = $t->ua->build_tx(GET => _comments_as_tree_url());
-
-    $t->request_ok($tx)
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8');
-
-    my $json = $tx->res->json;
-
-    if (ref $json eq 'ARRAY') {
-        pass 'Contains array';
-
-        if (@{ $json }) {
-            my $article = $json->[0];
-            ok(
-                ref($article) eq 'HASH'
-                && exists($article->{'id'})
-                && defined($article->{'id'})
-                && $article->{'id'} =~ m{^\d+$}x
-                && exists($article->{'parent_id'})
-                && defined($article->{'parent_id'})
-                && $article->{'parent_id'} =~ m{^\d+$}x
-            );
-        }
-        else {
-            pass 'Array is empty';
-        }
-    }
-    else {
-        fail 'Not an array';
-    }
-};
-
-#-----------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------
-subtest 'POST /blog/articles/:article_id/comments' => sub {
-    plan tests => 4;
-
-    my $form = {
-        parent_id => 0,
-        name      => 'Comment name',
-        comment   => 'Comment body',
-    };
-
-    my $tx = $t->ua->build_tx(POST => _comments_url() => json => $form);
-
-    $t->request_ok($tx)
-        ->status_is(201)
-        ->content_type_is('application/json;charset=UTF-8');
-
-    my $json = $tx->res->json;
-
-    ok(
-        ref($json) eq 'HASH'
-        && exists($json->{'id'})
-        && defined($json->{'id'})
-        && $json->{'id'} =~ m{^\d+$}x
-    );
-
-    $comment_id = $json->{'id'};
-};
-
-#-----------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------
-subtest 'GET /blog/articles/:article_id/comments/:comment_id' => sub {
-    plan tests => 8;
-
-    $t->get_ok(_comment_url())
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8')
-        ->json_is('/id' => $comment_id)
-        ->json_is('/article_id' => $article_id)
-        ->json_is('/parent_id' => 0)
-        ->json_is('/name' => 'Comment name')
-        ->json_is('/comment' => 'Comment body');
+    $t->get_ok($comment->comment_url)->status_is(404)
 };
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
-    plan tests => 4;
+    plan tests => 14;
+
+    my $article = create_article();
+
+    my $comment = create_comment($article, {});
+
+    $comment = get_comment($comment);
 
     my $form = {
         parent_id => 0,
@@ -236,67 +126,368 @@ subtest 'PUT /blog/articles/:article_id/comments/:comment_id' => sub {
         comment   => 'Another comment body',
     };
 
-    $t->put_ok(_comment_url() => json => $form)
+    $t->put_ok($comment->comment_url, json => $form)
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
+
+    my $updated = get_comment($comment);
+
+    is $updated->article->article_id, $comment->article->article_id;
+
+    is $updated->comment_id, $comment->comment_id;
+
+    is $updated->parent_id,  $form->{'parent_id'};
+    is $updated->name,       $form->{'name'};
+    is $updated->comment,    $form->{'comment'};
+
+    delete_article($article);
 };
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
-subtest 'DELETE /blog/articles/:article_id/comments/:comment_id' => sub {
-    plan tests => 4;
+subtest 'GET /blog/articles/:article_id/comments' => sub {
+    plan tests => 13;
 
-    $t->delete_ok(_comment_url())
-        ->status_is(200)
-        ->content_type_is('application/json;charset=UTF-8')
-        ->json_is({});
+
+    my $article = create_article();
+
+
+    my $comment_0_0 = create_comment($article, {parent_id => 0});
+    my $comment_0_1 = create_comment($article, {parent_id => $comment_0_0->comment_id});
+    my $comment_0_2 = create_comment($article, {parent_id => $comment_0_0->comment_id});
+
+    my $comment_1_0 = create_comment($article, {parent_id => 0});
+    my $comment_1_1 = create_comment($article, {parent_id => $comment_1_0->comment_id});
+    my $comment_1_2 = create_comment($article, {parent_id => $comment_1_0->comment_id});
+
+    my $comment_2_0 = create_comment($article, {parent_id => 0});
+
+
+    my $json = do {
+        my $tx = $t->ua->build_tx(GET => $article->comments_url);
+
+        $t->request_ok($tx)
+            ->status_is(200)
+            ->content_type_is('application/json;charset=UTF-8');
+
+        $tx->res->json;
+    };
+
+    is_deeply $json, [
+        {
+            id        => $comment_0_0->comment_id,
+            parent_id => $comment_0_0->parent_id,
+        },
+        {
+            id        => $comment_0_1->comment_id,
+            parent_id => $comment_0_1->parent_id,
+        },
+        {
+            id        => $comment_0_2->comment_id,
+            parent_id => $comment_0_2->parent_id,
+        },
+        {
+            id        => $comment_1_0->comment_id,
+            parent_id => $comment_1_0->parent_id,
+        },
+        {
+            id        => $comment_1_1->comment_id,
+            parent_id => $comment_1_1->parent_id,
+        },
+        {
+            id        => $comment_1_2->comment_id,
+            parent_id => $comment_1_2->parent_id,
+        },
+        {
+            id        => $comment_2_0->comment_id,
+            parent_id => $comment_2_0->parent_id,
+        },
+    ];
+
+    delete_article($article);
 };
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
-_delete_article();
+subtest 'GET /blog/articles/:article_id/comments/as_tree' => sub {
+    plan tests => 13;
 
-#-----------------------------------------------------------------------------------------
-#-- subroutines --------------------------------------------------------------------------
-sub _articles_url {
-    return '/blog/articles'
-}
 
-sub _article_url {
-    return sprintf '%s/%d', _articles_url(), $article_id;
-}
+    my $article = create_article();
 
-sub _comments_url {
-    return sprintf '%s/comments', _article_url();
-}
 
-sub _comments_as_tree_url {
-    return sprintf '%s/comments/as_tree', _article_url();
-}
+    my $comment_0_0 = create_comment($article, {parent_id => 0});
+    my $comment_0_1 = create_comment($article, {parent_id => $comment_0_0->comment_id});
+    my $comment_0_2 = create_comment($article, {parent_id => $comment_0_0->comment_id});
 
-sub _comment_url {
-    return sprintf '%s/%d', _comments_url(), $comment_id;
-}
+    my $comment_1_0 = create_comment($article, {parent_id => 0});
+    my $comment_1_1 = create_comment($article, {parent_id => $comment_1_0->comment_id});
+    my $comment_1_2 = create_comment($article, {parent_id => $comment_1_0->comment_id});
 
-sub _create_article {
-    my $form = {name => 'Article name'};
+    my $comment_2_0 = create_comment($article, {parent_id => 0});
 
-    my $tx = $t->ua->build_tx(POST => _articles_url() => json => $form);
-    $t->request_ok($tx);
+
+    my $tx = $t->ua->build_tx(GET => $article->comments_as_tree_url);
+
+    $t->request_ok($tx)
+        ->status_is(200)
+        ->content_type_is('application/json;charset=UTF-8');
 
     my $json = $tx->res->json;
 
-    $article_id = $json->{'id'};
+    is_deeply $json, [
+        {
+            id        => $comment_0_0->comment_id,
+            parent_id => $comment_0_0->parent_id,
+            comments  => [
+                {
+                    id        => $comment_0_1->comment_id,
+                    parent_id => $comment_0_1->parent_id,
+                    comments  => [],
+                },
+                {
+                    id        => $comment_0_2->comment_id,
+                    parent_id => $comment_0_2->parent_id,
+                    comments  => [],
+                },
+            ],
+        },
+        {
+            id        => $comment_1_0->comment_id,
+            parent_id => $comment_1_0->parent_id,
+            comments  => [
+                {
+                    id        => $comment_1_1->comment_id,
+                    parent_id => $comment_1_1->parent_id,
+                    comments  => [],
+                },
+                {
+                    id        => $comment_1_2->comment_id,
+                    parent_id => $comment_1_2->parent_id,
+                    comments  => [],
+                },
+            ],
+        },
+        {
+            id        => $comment_2_0->comment_id,
+            parent_id => $comment_2_0->parent_id,
+            comments  => [],
+        },
+    ];
+
+
+    delete_article($article);
+};
+
+#-----------------------------------------------------------------------------------------
+#-- subroutines --------------------------------------------------------------------------
+sub create_article {
+    my $article_name = 'Article name';
+
+    my $form = {name => $article_name};
+    my $url  = TestArticle->articles_url;
+
+    my $tx = $t->ua->build_tx(POST => $url, json => $form);
+
+    my $article_id;
+
+    subtest 'create_article()' => sub {
+        plan tests => 4;
+
+        $t->request_ok($tx)
+            ->status_is(201)
+            ->content_type_is('application/json;charset=UTF-8');
+
+        my $json = $tx->res->json;
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'id'})
+            && defined($json->{'id'})
+            && $json->{'id'} =~ m{^\d+$}x
+        );
+
+        $article_id = $json->{'id'};
+    };
+
+    return TestArticle->new(
+        article_id => $article_id,
+        name       => $article_name,
+    );
 }
 
-sub _delete_article {
-    my $form = {name => 'Article name'};
+sub get_article {
+    my $article = shift;
 
-    my $tx = $t->ua->build_tx(DELETE => _article_url());
-    $t->request_ok($tx);
+    my ($article_id, $article_name);
 
-    undef $article_id;
+    subtest 'get_article()' => sub {
+        my $tx = $t->ua->build_tx(GET => $article->article_url);
+
+        $t->request_ok($tx)
+            ->status_is(200)
+            ->content_type_is('application/json;charset=UTF-8');
+
+        my $json = $tx->res->json;
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'id'})
+            && defined($json->{'id'})
+            && $json->{'id'} =~ m{^\d+$}x
+        );
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'name'})
+            && defined($json->{'name'})
+            && length($json->{'name'})
+        );
+
+        ($article_id, $article_name) = map { $json->{$_} } qw(id name);
+    };
+
+    return TestArticle->new(
+        article_id => $article_id,
+        name       => $article_name,
+    );
+}
+
+sub delete_article {
+    my $article = shift;
+
+    subtest 'delete_article()' => sub {
+        plan tests => 6;
+
+        $t->delete_ok($article->article_url)
+            ->status_is(200)
+            ->content_type_is('application/json;charset=UTF-8')
+            ->json_is({});
+
+        $t->get_ok($article->article_url)->status_is(404)
+    };
+
+    undef $article;
+}
+
+sub create_comment {
+    my ($article, $form) = @_;
+
+    $form->{'parent_id'} //= 0;
+    $form->{'name'}      //= 'Comment name';
+    $form->{'comment'}   //= 'Comment body';
+
+    my $comment_id;
+
+    subtest 'create_comment()' => sub {
+        plan tests => 4;
+
+        my $tx = $t->ua->build_tx(POST => $article->comments_url, json => $form);
+
+        $t->request_ok($tx)
+            ->status_is(201)
+            ->content_type_is('application/json;charset=UTF-8');
+
+        my $json = $tx->res->json;
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'id'})
+            && defined($json->{'id'})
+            && $json->{'id'} =~ m{^\d+$}x
+        );
+
+        $comment_id = $json->{'id'};
+    };
+
+    return TestArticleComments->new(
+        article    => $article,
+        comment_id => $comment_id,
+        parent_id  => $form->{'parent_id'},
+        name       => $form->{'name'},
+        comment    => $form->{'comment'},
+    );
+}
+
+sub get_comment {
+    my $comment = shift;
+
+    my $json;
+
+    subtest 'get_comment()' => sub {
+        plan tests => 9;
+
+        my $tx = $t->ua->build_tx(GET => $comment->comment_url);
+
+        $t->request_ok($tx)
+            ->status_is(200)
+            ->content_type_is('application/json;charset=UTF-8');
+
+        $json = $tx->res->json;
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'id'})
+            && defined($json->{'id'})
+            && $json->{'id'} =~ m{^\d+$}x
+        );
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'article_id'})
+            && defined($json->{'article_id'})
+            && $json->{'article_id'} =~ m{^\d+$}x
+        );
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'parent_id'})
+            && defined($json->{'parent_id'})
+            && $json->{'parent_id'} =~ m{^\d+$}x
+        );
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'name'})
+            && defined($json->{'name'})
+            && length($json->{'name'})
+        );
+
+        ok(
+            ref($json) eq 'HASH'
+            && exists($json->{'comment'})
+            && defined($json->{'comment'})
+            && length($json->{'comment'})
+        );
+
+        is $json->{'article_id'}, $comment->article->article_id;
+    };
+
+    return TestArticleComments->new(
+        article    => $comment->article,
+        comment_id => $json->{'id'},
+        parent_id  => $json->{'parent_id'},
+        name       => $json->{'name'},
+        comment    => $json->{'comment'},
+    );
+}
+
+sub delete_comment {
+    my $comment = shift;
+
+    subtest 'delete_comment()' => sub {
+        plan tests => 6;
+
+        $t->delete_ok($comment->comment_url)
+            ->status_is(200)
+            ->content_type_is('application/json;charset=UTF-8')
+            ->json_is({});
+
+        $t->get_ok($comment->comment_url)->status_is(404)
+    };
+
+    undef $comment;
 }
 
 #-----------------------------------------------------------------------------------------
