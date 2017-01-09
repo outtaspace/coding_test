@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
-use Mojo::Base -strict;
 use lib::abs qw(../lib);
+
+use Mojo::Base -strict;
 use Test::Mojo;
 use Test::More;
 
@@ -13,8 +14,6 @@ plan tests => 14;
 require (lib::abs::path('../rest_api.pl'));
 
 my $t = Test::Mojo->new;
-
-my ($article_id, $comment_id);
 
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
