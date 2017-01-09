@@ -109,9 +109,6 @@ def update_comment(article_id, comment_id):
         .filter(ArticleComment.article_id == article_id)
         .first_or_404()
     )
-    comment.article_id = article_id
-    if 'parent_id' in form.data and isinstance(form.data['parent_id'], int):
-        comment.parent_id = form.data['parent_id']
     comment.name = form.data['name']
     comment.comment = form.data['comment']
     db.session.add(comment)
