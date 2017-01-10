@@ -16,10 +16,14 @@ def configure(app):
     app.config.from_object(config[domain])
 
 
+def register_blueprints(app):
+    from articles.blueprint import articles
+    app.register_blueprint(articles)
+
+
 app = Flask(__name__)
 configure(app)
 
 db = SQLAlchemy(app)
 
-from articles.blueprint import articles # noqa
-app.register_blueprint(articles)
+register_blueprints(app)
