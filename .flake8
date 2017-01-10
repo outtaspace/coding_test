@@ -6,4 +6,4 @@ import-order-style = google
 
 inline-quotes = '
 
-ignore = D100,D101,D102,D103,D105
+ignore = D100,D101,D102,D103,D104,D105
