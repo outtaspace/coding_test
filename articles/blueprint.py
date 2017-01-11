@@ -20,7 +20,7 @@ def get_all_articles():
     articles = []
     for row in Article.query.all():
         articles.append(dict(id=row.id, name=row.name))
-    return jsonify(articles=articles)
+    return jsonify(articles)
 
 
 @articles.route('/blog/articles', methods=['POST'])
@@ -66,7 +66,7 @@ def delete_article(article_id):
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['GET'])
 def get_all_comments(article_id):
     comments = _fetch_all_comments_for(article_id)
-    return jsonify(all_comments=comments)
+    return jsonify(comments)
 
 
 @articles.route(
@@ -75,7 +75,7 @@ def get_all_comments(article_id):
 )
 def get_all_comments_as_tree(article_id):
     comments = _build_tree_of_comments(article_id)
-    return jsonify(all_comments=comments)
+    return jsonify(comments)
 
 
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['POST'])
