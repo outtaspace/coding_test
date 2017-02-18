@@ -12,8 +12,8 @@ class TestArticle:
         self.article_id = article_id
         self.name = name
 
-    @classmethod
-    def articles_url(cls):
+    @staticmethod
+    def articles_url():
         return '/blog/articles'
 
     def article_url(self):
@@ -28,8 +28,8 @@ class TestArticle:
         )
 
     def comments_as_tree_url(self):
-        return '{article_url}/comments/as_tree'.format(
-            article_url=self.article_url()
+        return '{comments_url}/as_tree'.format(
+            comments_url=self.comments_url()
         )
 
 
@@ -55,7 +55,6 @@ class TestArticleComments:
 
 
 class BlogAPITest(unittest.TestCase):
-
     def setUp(self):
         self.app = app.test_client()
 
@@ -318,7 +317,9 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content_type, 'text/html')
 
-    def _create_comment(self, article, form={}):
+    def _create_comment(self, article, form=None):
+        if form is None:
+            form = {}
         if 'parent_id' not in form:
             form['parent_id'] = 0
         if 'name' not in form:
