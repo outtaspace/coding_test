@@ -3,6 +3,7 @@ Flask-Migrate==2.0.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.1
 Flask-WTF==0.13.1
+WTForms-JSON
 mysql-connector==2.1.4
 flake8
 flake8-import-order
