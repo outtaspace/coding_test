@@ -25,9 +25,9 @@ class ArticleCommentForm(wtforms.Form):
 class ValidationError(Exception):
     status_code = 422
 
-    def __init__(self, errors):
+    def __init__(self, errors) -> None:
         Exception.__init__(self)
         self.errors = errors
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return dict(self.errors or ())

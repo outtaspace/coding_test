@@ -5,7 +5,7 @@ from flask import json
 
 
 class TestArticle:
-    def __init__(self, article_id, name):
+    def __init__(self, article_id, name) -> None:
         assert isinstance(article_id, int)
         assert isinstance(name, str)
 
@@ -13,28 +13,28 @@ class TestArticle:
         self.name = name
 
     @staticmethod
-    def articles_url():
+    def articles_url() -> str:
         return '/blog/articles'
 
-    def article_url(self):
+    def article_url(self) -> str:
         return '{articles_url}/{article_id}'.format(
             articles_url=self.articles_url(),
             article_id=self.article_id
         )
 
-    def comments_url(self):
+    def comments_url(self) -> str:
         return '{article_url}/comments'.format(
             article_url=self.article_url()
         )
 
-    def comments_as_tree_url(self):
+    def comments_as_tree_url(self) -> str:
         return '{comments_url}/as_tree'.format(
             comments_url=self.comments_url()
         )
 
 
 class TestArticleComments:
-    def __init__(self, article, comment_id, parent_id, name, comment):
+    def __init__(self, article, comment_id, parent_id, name, comment) -> None:
         assert isinstance(article, TestArticle)
         assert isinstance(comment_id, int)
         assert isinstance(parent_id, int)
@@ -47,7 +47,7 @@ class TestArticleComments:
         self.name = name
         self.comment = comment
 
-    def comment_url(self):
+    def comment_url(self) -> str:
         return '{comments_url}/{comment_id}'.format(
             comments_url=self.article.comments_url(),
             comment_id=self.comment_id
@@ -273,7 +273,7 @@ class BlogAPITest(unittest.TestCase):
 
         self._delete_article(article)
 
-    def _create_article(self):
+    def _create_article(self) -> TestArticle:
         form = dict(name='Article name')
 
         response = self.app.post(
@@ -291,7 +291,7 @@ class BlogAPITest(unittest.TestCase):
 
         return TestArticle(article_id=data['id'], name=form['name'])
 
-    def _get_article(self, article):
+    def _get_article(self, article) -> TestArticle:
         response = self.app.get(article.article_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
@@ -305,7 +305,7 @@ class BlogAPITest(unittest.TestCase):
 
         return TestArticle(article_id=data['id'], name=data['name'])
 
-    def _delete_article(self, article):
+    def _delete_article(self, article) -> None:
         response = self.app.delete(article.article_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
@@ -317,7 +317,7 @@ class BlogAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content_type, 'text/html')
 
-    def _create_comment(self, article, form=None):
+    def _create_comment(self, article, form=None) -> TestArticleComments:
         if form is None:
             form = {}
         if 'parent_id' not in form:
@@ -348,7 +348,7 @@ class BlogAPITest(unittest.TestCase):
             comment=form['comment']
         )
 
-    def _get_comment(self, comment):
+    def _get_comment(self, comment) -> TestArticleComments:
         response = self.app.get(comment.comment_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
@@ -374,7 +374,7 @@ class BlogAPITest(unittest.TestCase):
             comment=data['comment']
         )
 
-    def _delete_comment(self, comment):
+    def _delete_comment(self, comment) -> None:
         response = self.app.delete(comment.comment_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')

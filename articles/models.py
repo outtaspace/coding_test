@@ -1,3 +1,5 @@
+from reprlib import repr
+
 from app import db
 
 
@@ -13,8 +15,9 @@ class Article(db.Model):
         passive_deletes=True
     )
 
-    def __repr__(self):
-        return '<Article id={id}>'.format(id=self.id)
+    def __repr__(self) -> str:
+        template = 'Article(id={id}, name="{name}")'
+        return template.format(id=self.id, name=repr(self.name))
 
 
 class ArticleComment(db.Model):
@@ -34,16 +37,19 @@ class ArticleComment(db.Model):
     name = db.Column(db.String(255), nullable=False)
     comment = db.Column(db.Text, nullable=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         template = (
-            '<ArticleComment'
+            'ArticleComment(id={id},'
             ' article_id={article_id},'
             ' parent_id={parent_id},'
-            ' comment={comment}'
-            '>'
+            ' name="{name}",'
+            ' comment="{comment}"'
+            ')'
         )
         return template.format(
+            id=self.id,
             article_id=self.article_id,
             parent_id=self.parent_id,
-            comment=self.comment
+            name=repr(self.name),
+            comment=repr(self.comment)
         )

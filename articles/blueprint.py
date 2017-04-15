@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from app import db
 from flask import Blueprint, jsonify, request
 
@@ -7,16 +9,19 @@ from articles.models import Article, ArticleComment
 
 articles = Blueprint('articles', __name__)
 
+OK = jsonify
+Created = Tuple[jsonify, int]
+
 
 @articles.errorhandler(ValidationError)
-def handle_validation_error(error):
+def handle_validation_error(error) -> OK:
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
 
 
 @articles.route('/blog/articles', methods=['GET'])
-def get_all_articles():
+def get_all_articles() -> OK:
     articles = []
     for row in Article.query.all():
         articles.append(dict(id=row.id, name=row.name))
@@ -24,7 +29,7 @@ def get_all_articles():
 
 
 @articles.route('/blog/articles', methods=['POST'])
-def create_article():
+def create_article() -> Created:
     form = ArticleForm.from_json(request.get_json())
     if not form.validate():
         raise ValidationError(form.errors)
@@ -36,7 +41,7 @@ def create_article():
 
 
 @articles.route('/blog/articles/<int:article_id>', methods=['PUT'])
-def update_article(article_id):
+def update_article(article_id: int) -> OK:
     form = ArticleForm.from_json(request.get_json())
     if not form.validate():
         raise ValidationError(form.errors)
@@ -48,7 +53,7 @@ def update_article(article_id):
 
 
 @articles.route('/blog/articles/<int:article_id>', methods=['GET'])
-def get_article(article_id):
+def get_article(article_id: int) -> OK:
     article = Article.query.filter(Article.id == article_id).first_or_404()
     db.session.add(article)
     db.session.commit()
@@ -56,7 +61,7 @@ def get_article(article_id):
 
 
 @articles.route('/blog/articles/<int:article_id>', methods=['DELETE'])
-def delete_article(article_id):
+def delete_article(article_id: int) -> OK:
     article = Article.query.filter(Article.id == article_id).first_or_404()
     db.session.delete(article)
     db.session.commit()
@@ -64,7 +69,7 @@ def delete_article(article_id):
 
 
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['GET'])
-def get_all_comments(article_id):
+def get_all_comments(article_id: int) -> OK:
     comments = _fetch_all_comments_for(article_id)
     return jsonify(comments)
 
@@ -73,13 +78,13 @@ def get_all_comments(article_id):
     '/blog/articles/<int:article_id>/comments/as_tree',
     methods=['GET']
 )
-def get_all_comments_as_tree(article_id):
+def get_all_comments_as_tree(article_id: int) -> OK:
     comments = _build_tree_of_comments(article_id)
     return jsonify(comments)
 
 
 @articles.route('/blog/articles/<int:article_id>/comments', methods=['POST'])
-def create_comment(article_id):
+def create_comment(article_id: int) -> Created:
     form = ArticleCommentForm.from_json(request.get_json())
     if not form.validate():
         raise ValidationError(form.errors)
@@ -98,7 +103,7 @@ def create_comment(article_id):
     '/blog/articles/<int:article_id>/comments/<int:comment_id>',
     methods=['PUT']
 )
-def update_comment(article_id, comment_id):
+def update_comment(article_id: int, comment_id: int) -> OK:
     form = ArticleCommentForm.from_json(request.get_json())
     if not form.validate():
         raise ValidationError(form.errors)
@@ -120,7 +125,7 @@ def update_comment(article_id, comment_id):
     '/blog/articles/<int:article_id>/comments/<int:comment_id>',
     methods=['GET']
 )
-def get_comment(article_id, comment_id):
+def get_comment(article_id: int, comment_id: int) -> OK:
     comment = (
         ArticleComment
         .query
@@ -141,7 +146,7 @@ def get_comment(article_id, comment_id):
     '/blog/articles/<int:article_id>/comments/<int:comment_id>',
     methods=['DELETE']
 )
-def delete_comment(article_id, comment_id):
+def delete_comment(article_id: int, comment_id: int) -> OK:
     comment = (
         ArticleComment
         .query
@@ -154,7 +159,7 @@ def delete_comment(article_id, comment_id):
     return jsonify()
 
 
-def _fetch_all_comments_for(article_id):
+def _fetch_all_comments_for(article_id: int) -> list:
     resultset = (
         ArticleComment
         .query
@@ -174,7 +179,7 @@ def _fetch_all_comments_for(article_id):
     return comments
 
 
-def _build_tree_of_comments(article_id):
+def _build_tree_of_comments(article_id: int) -> list:
     parent = {0: []}
     for comment in _fetch_all_comments_for(article_id):
         comment['comments'] = []
