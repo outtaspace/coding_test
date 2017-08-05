@@ -17,9 +17,7 @@ helper pg => sub {
 get '/blog/articles' => sub {
     my $self = shift;
 
-    my $db = $self->app->pg->db;
-
-    my $articles = $db->select('blog.articles', [qw(id name)])->hashes;
+    my $articles = $self->app->pg->db->select('blog.articles', [qw(id name)])->hashes;
 
     $self->render(json => $articles);
 };
@@ -29,9 +27,7 @@ post '/blog/articles' => sub {
 
     my $article_name = $self->req->json->{'name'};
 
-    my $db = $self->app->pg->db;
-
-    my $article_id = $db->insert(
+    my $article_id = $self->app->pg->db->insert(
         'blog.articles',
         {name => $article_name},
         {returning => 'id'},
@@ -48,9 +44,7 @@ put '/blog/articles/:article_id' => sub {
     my $article_id   = $self->param('article_id');
     my $article_name = $self->req->json->{'name'};
 
-    my $db = $self->app->pg->db;
-
-    $article_id = $db->update(
+    $article_id = $self->app->pg->db->update(
         'blog.articles',
         {name => $article_name},
         {id => $article_id},
@@ -67,9 +61,11 @@ get '/blog/articles/:article_id' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $db = $self->app->pg->db;
-
-    my $article = $db->select('blog.articles', [qw(id name)], {id => $article_id})->hash;
+    my $article = $self->app->pg->db->select(
+        'blog.articles',
+        [qw(id name)],
+        {id => $article_id},
+    )->hash;
 
     return $self->reply->not_found unless $article;
 
@@ -81,9 +77,7 @@ del '/blog/articles/:article_id' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $db = $self->app->pg->db;
-
-    $article_id = $db->delete(
+    $article_id = $self->app->pg->db->delete(
         'blog.articles',
         {id => $article_id},
         {returning => 'id'},
@@ -101,10 +95,9 @@ get '/blog/articles/:article_id/comments' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $db = $self->app->pg->db;
-
     my $comments;
     try {
+        my $db = $self->app->pg->db;
         my $tx = $db->begin;
 
         if (is_article_exists($db, $article_id)) {
@@ -124,10 +117,9 @@ get '/blog/articles/:article_id/comments/as_tree' => sub {
 
     my $article_id = $self->param('article_id');
 
-    my $db = $self->app->pg->db;
-
     my $comments;
     try {
+        my $db = $self->app->pg->db;
         my $tx = $db->begin;
 
         if (is_article_exists($db, $article_id)) {
@@ -152,10 +144,9 @@ post '/blog/articles/:article_id/comments' => sub {
     my $name       = $json->{'name'};
     my $comment    = $json->{'comment'};
 
-    my $db = $self->app->pg->db;
-
     my $comment_id;
     try {
+        my $db = $self->app->pg->db;
         my $tx = $db->begin;
 
         if (is_article_exists($db, $article_id)) {
@@ -187,9 +178,7 @@ get '/blog/articles/:article_id/comments/:comment_id' => sub {
     my $article_id = $self->param('article_id');
     my $comment_id = $self->param('comment_id');
 
-    my $db = $self->app->pg->db;
-
-    my $comment = $db->select(
+    my $comment = $self->app->pg->db->select(
         'blog.article_comments',
         [qw(id article_id parent_id name comment)],
         {article_id => $article_id, id => $comment_id},
@@ -213,9 +202,7 @@ put '/blog/articles/:article_id/comments/:comment_id' => sub {
         $comment = $json->{'comment'};
     }
 
-    my $db = $self->app->pg->db;
-
-    $comment_id = $db->update(
+    $comment_id = $self->app->pg->db->update(
         'blog.article_comments',
         {name => $name, comment => $comment},
         {article_id => $article_id, id => $comment_id},
@@ -233,9 +220,7 @@ del '/blog/articles/:article_id/comments/:comment_id' => sub {
     my $article_id = $self->param('article_id');
     my $comment_id = $self->param('comment_id');
 
-    my $db = $self->app->pg->db;
-
-    $comment_id = $db->delete(
+    $comment_id = $self->app->pg->db->delete(
         'blog.article_comments',
         {article_id => $article_id, id => $comment_id},
         {returning => 'id'},
