@@ -1,4 +1,5 @@
 requires 'Mojolicious::Lite';
-requires 'DBD::mysql';
+requires 'Mojo::Pg';
 requires 'lib::abs';
+requires 'Try::Tiny'
 
