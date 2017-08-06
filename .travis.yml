@@ -13,6 +13,7 @@ install:
 before_script:
     - psql -c 'create database coding_test;' -U postgres
     - psql -c "create role coding_test with password 'coding_test' login nosuperuser inherit nocreatedb nocreaterole noreplication;" -U postgres
+    - psql -c 'grant all on database coding_test to coding_test;'
     - "perl rest_api.pl migrate"
 script: "perl rest_api.pl test"
 sudo: false
