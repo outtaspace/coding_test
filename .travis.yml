@@ -1,0 +1,20 @@
+language: perl
+perl:
+    - "5.24"
+    - "5.22"
+    - "5.20"
+services:
+    - postgresql
+env:
+  global:
+    - PERL_CPANM_OPT="--notest --force --skip-satisfied"
+install:
+    - "cpanm --installdeps ."
+    - "perl rest_api.pl migrate"
+before_script:
+  - psql -c 'create database coding_test;' -U postgres
+script: "perl rest_api.pl test"
+sudo: false
+notifications:
+    email: false
+
