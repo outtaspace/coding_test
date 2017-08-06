@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+use lib::abs qw(./lib);
+
 use Mojolicious::Lite;
 use Mojo::Pg;
 use Try::Tiny;
