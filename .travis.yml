@@ -13,6 +13,8 @@ install:
     - "perl rest_api.pl migrate"
 before_script:
   - psql -c 'create database coding_test;create role coding_test login nosuperuser inherit nocreatedb nocreaterole noreplication;' -U postgres
+  - psql -c "create user coding_test with password 'coding_test';" -U postgres
+  - psql -c 'create role coding_test login nosuperuser inherit nocreatedb nocreaterole noreplication;' -U postgres
 script: "perl rest_api.pl test"
 sudo: false
 notifications:
