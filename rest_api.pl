@@ -19,7 +19,12 @@ helper pg => sub {
 get '/blog/articles' => sub {
     my $self = shift;
 
-    my $articles = $self->app->pg->db->select('blog.articles', [qw(id name)])->hashes;
+    my $articles = $self->app->pg->db->select(
+        'blog.articles',
+        [qw(id name)],
+        undef,
+        {-asc => 'id'},
+    )->hashes;
 
     $self->render(json => $articles);
 };
@@ -256,6 +261,7 @@ sub _fetch_all_comments_for {
         'blog.article_comments',
         [qw(id parent_id)],
         {article_id => $article_id},
+        {-asc => 'id'},
     )->hashes;
 }
 
