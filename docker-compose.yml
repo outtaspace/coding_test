@@ -1,0 +1,35 @@
+version: '3'
+services:
+    nginx-proxy:
+        image: jwilder/nginx-proxy:alpine
+        container_name: nginx-proxy
+        restart: on-failure
+        ports:
+            - "80:80"
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        networks:
+            - mynetwork
+    db:
+        image: postgres:alpine
+        restart: on-failure
+        ports:
+            - "5600:5432"
+        networks:
+            mynetwork:
+                aliases:
+                    - db.internal.prod.com
+    web:
+        image: outtaspace/coding_test
+        container_name: web
+        restart: on-failure
+        environment:
+            - VIRTUAL_HOST=coding_test.local
+        networks:
+            - mynetwork
+        depends_on:
+            - db
+            - nginx-proxy
+networks:
+    mynetwork:
+        driver: bridge
