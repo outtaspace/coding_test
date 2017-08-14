@@ -8,8 +8,8 @@ services:
 env:
   global:
     - PERL_CPANM_OPT="--notest --force --skip-satisfied"
-    - MOJO_MODE=production
-    - MOJO_CONFIG=rest_api.production.conf
+    - MOJO_MODE=development
+    - MOJO_CONFIG=rest_api.development.conf
 install:
     - "cpanm --installdeps ."
 before_script:
