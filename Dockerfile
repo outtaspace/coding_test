@@ -1,7 +1,6 @@
 FROM alpine:3.4
 
 ENV DIRPATH /usr/share/coding_test
-ENV EV_EXTRA_DEFS -DEV_NO_ATFORK
 
 COPY cpanfile /
 RUN apk update && \
@@ -10,17 +9,22 @@ RUN apk update && \
     cpanm --installdeps . -M https://cpan.metacpan.org && \
     apk del perl-dev g++ make wget curl && \
     rm -rf /root/.cpanm/* /usr/local/share/man/* && \
-    rm -f cpanfile \
+    rm -f cpanfile
 
 WORKDIR $DIRPATH
 
-COPY rest_api.conf .
-COPY rest_api.pl .
-COPY lib/ lib/
-COPY migrations/ migrations/
+ADD lib/ lib/
+ADD migrations/ migrations/
+ADD t/ t/
+ADD rest_api.production.conf rest_api.conf
+ADD rest_api.pl .
+
+ENV MOJO_MIGRATIONS_DEBUG 1
+ENV MOJO_REVERSE_PROXY 1
+ENV MOJO_MODE production
 
 CMD ["perl", "rest_api.pl", "migrate"]
 CMD ["perl", "rest_api.pl", "test"]
 
 EXPOSE 8080
-CMD ["perl", "rest_api.pl", "daemon", "-m", "production", "-l", "http://*:8080"]
+ENTRYPOINT ["perl", "rest_api.pl", "prefork", "-l", "http://*:8080"]
