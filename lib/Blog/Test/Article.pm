@@ -2,13 +2,13 @@ package Blog::Test::Article;
 
 use Mojo::Base 'Blog::Test::Articles';
 
-has 'article_id';
+has 'id';
 has 'name';
 
 sub url {
     my $self = shift;
 
-    return sprintf '%s%d/', $self->SUPER::url, $self->article_id;
+    return sprintf '%s%d/', $self->SUPER::url, $self->id;
 }
 
 sub comments_url {
@@ -20,7 +20,7 @@ sub comments_url {
 sub comments_as_tree_url {
     my $self = shift;
 
-    return sprintf '%scomments_as_tree/', $self->url;
+    return sprintf '%scomments/as_tree/', $self->url;
 }
 
 1;

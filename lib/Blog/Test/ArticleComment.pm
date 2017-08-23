@@ -1,8 +1,9 @@
 package Blog::Test::ArticleComment;
 
-use Mojo::Base 'Blog::Test::ArticleComments';
+use Mojo::Base -base;
 
-has 'comment_id';
+has 'id';
+has 'article_id';
 has 'parent_id';
 has 'name';
 has 'comment';
@@ -10,7 +11,7 @@ has 'comment';
 sub url {
     my $self = shift;
 
-    return sprintf '%s%d/', $self->SUPER::url, $self->comment_id;
+    return sprintf '/blog/comments/%d/', $self->id;
 }
 
 1;

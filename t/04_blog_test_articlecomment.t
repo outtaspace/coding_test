@@ -16,15 +16,15 @@ subtest 'new()' => sub {
     my $o = Blog::Test::ArticleComment->new;
 
     ok $o;
-    isa_ok $o, 'Blog::Test::ArticleComments';
-    can_ok $o, qw(url comment_id parent_id name comment);
+    isa_ok $o, 'Mojo::Base';
+    can_ok $o, qw(url id article_id parent_id name comment);
 };
 
 subtest 'url()' => sub {
     plan tests => 1;
 
     my $o = Blog::Test::ArticleComment->new(
-        comment_id => 42,
+        id => 42,
     );
 
     is $o->url, '/blog/comments/42/';

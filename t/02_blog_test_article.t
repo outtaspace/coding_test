@@ -17,14 +17,14 @@ subtest 'new()' => sub {
 
     ok $o;
     isa_ok $o, 'Blog::Test::Articles';
-    can_ok $o, qw(article_id name url comments_url);
+    can_ok $o, qw(id name url comments_url comments_as_tree_url);
 };
 
 subtest 'url()' => sub {
     plan tests => 1;
 
     my $o = Blog::Test::Article->new(
-        article_id => 42,
+        id => 42,
     );
 
     is $o->url, '/blog/articles/42/';
@@ -34,7 +34,7 @@ subtest 'comments_url()' => sub {
     plan tests => 1;
 
     my $o = Blog::Test::Article->new(
-        article_id => 42,
+        id => 42,
     );
 
     is $o->comments_url, '/blog/articles/42/comments/';
@@ -44,9 +44,9 @@ subtest 'comments_as_tree_url()' => sub {
     plan tests => 1;
 
     my $o = Blog::Test::Article->new(
-        article_id => 42,
+        id => 42,
     );
 
-    is $o->comments_as_tree_url, '/blog/articles/42/comments_as_tree/';
+    is $o->comments_as_tree_url, '/blog/articles/42/comments/as_tree/';
 };
 

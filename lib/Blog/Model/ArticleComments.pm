@@ -60,7 +60,7 @@ sub create {
         my $db = $self->pg->db;
         my $tx = $db->begin;
 
-        if ($self->is_article_exists($param{'article_id'})) {
+        if ($self->is_article_exists(article_id => $param{'article_id'})) {
             $id = $db->insert(
                 'blog.article_comments',
                 {
