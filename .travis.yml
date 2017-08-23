@@ -9,14 +9,13 @@ env:
   global:
     - PERL_CPANM_OPT="--notest --force --skip-satisfied"
     - MOJO_MODE=development
-    - MOJO_CONFIG=rest_api.development.conf
     - MOJO_MIGRATIONS_DEBUG=1
 install:
     - "cpanm --installdeps ."
 before_script:
     - psql -c 'create database coding_test;' -U postgres
-    - "perl rest_api.pl migrate"
-script: "perl rest_api.pl test"
+    - "perl bin/run.pl migrate"
+script: "perl bin/run.pl test"
 sudo: false
 notifications:
     email: false
