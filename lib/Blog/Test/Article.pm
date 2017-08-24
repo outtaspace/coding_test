@@ -1,26 +1,45 @@
 package Blog::Test::Article;
 
-use Mojo::Base 'Blog::Test::Articles';
+use Mojo::Base -base;
 
+has 'app';
 has 'id';
 has 'name';
 
-sub url {
+sub get_article {
     my $self = shift;
 
-    return sprintf '%s%d/', $self->SUPER::url, $self->id;
+    return $self->app->url_for('get_article', article_id => $self->id);
 }
 
-sub comments_url {
+sub update_article {
     my $self = shift;
 
-    return sprintf '%scomments/', $self->url;
+    return $self->app->url_for('update_article', article_id => $self->id);
 }
 
-sub comments_as_tree_url {
+sub delete_article {
     my $self = shift;
 
-    return sprintf '%scomments/as_tree/', $self->url;
+    return $self->app->url_for('delete_article', article_id => $self->id);
+}
+
+sub create_article_comment {
+    my $self = shift;
+
+    return $self->app->url_for('create_article_comment', article_id => $self->id);
+}
+
+sub get_all_article_comments {
+    my $self = shift;
+
+    return $self->app->url_for('get_all_article_comments', article_id => $self->id);
+}
+
+sub get_all_article_comments_as_tree {
+    my $self = shift;
+
+    return $self->app->url_for('get_all_article_comments_as_tree', article_id => $self->id);
 }
 
 1;

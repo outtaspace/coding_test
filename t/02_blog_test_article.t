@@ -3,50 +3,52 @@
 use lib::abs qw(../lib);
 
 use Mojo::Base -strict;
+use Test::Mojo;
 use Test::More;
 
-plan tests => 6;
+plan tests => 4;
+
+my $t = Test::Mojo->new('Blog');
 
 use_ok 'Blog::Test::Article';
 require_ok 'Blog::Test::Article';
 
 subtest 'new()' => sub {
-    plan tests => 3;
+    plan tests => 5;
 
-    my $o = Blog::Test::Article->new;
+    my $o = Blog::Test::Article->new(app => $t->app);
 
     ok $o;
-    isa_ok $o, 'Blog::Test::Articles';
-    can_ok $o, qw(id name url comments_url comments_as_tree_url);
-};
-
-subtest 'url()' => sub {
-    plan tests => 1;
-
-    my $o = Blog::Test::Article->new(
-        id => 42,
+    isa_ok $o, 'Mojo::Base';
+    can_ok $o, qw(
+        app
+        id
+        name
+        get_article
+        update_article
+        delete_article
+        create_article_comment
+        get_all_article_comments
+        get_all_article_comments_as_tree
     );
 
-    is $o->url, '/blog/articles/42/';
+    isa_ok $o->app, 'Mojolicious';
+    isa_ok $o->app, 'Blog';
 };
 
-subtest 'comments_url()' => sub {
-    plan tests => 1;
+subtest 'routes' => sub {
+    plan tests => 6;
 
     my $o = Blog::Test::Article->new(
-        id => 42,
+        app => $t->app,
+        id  => 42,
     );
 
-    is $o->comments_url, '/blog/articles/42/comments/';
-};
-
-subtest 'comments_as_tree_url()' => sub {
-    plan tests => 1;
-
-    my $o = Blog::Test::Article->new(
-        id => 42,
-    );
-
-    is $o->comments_as_tree_url, '/blog/articles/42/comments/as_tree/';
+    is $o->get_article,                      '/blog/articles/42';
+    is $o->update_article,                   '/blog/articles/42';
+    is $o->delete_article,                   '/blog/articles/42';
+    is $o->create_article_comment,           '/blog/articles/42/comments';
+    is $o->get_all_article_comments,         '/blog/articles/42/comments';
+    is $o->get_all_article_comments_as_tree, '/blog/articles/42/comments/as_tree';
 };
 

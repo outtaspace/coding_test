@@ -25,21 +25,51 @@ sub init_routes {
     my $r = $self->routes;
 
     # Blog::Controller::Articles
-    $r->get('/blog/articles/')->to('articles#all');
-    $r->post('/blog/articles/')->to('articles#create');
+    $r->get('/blog/articles/')
+        ->to('articles#all')
+        ->name('get_all_articles');
+
+    $r->post('/blog/articles/')
+        ->to('articles#create')
+        ->name('create_article');
 
     # Blog::Controller::Article
-    $r->get('/blog/articles/:article_id/')->to('article#get');
-    $r->put('/blog/articles/:article_id/')->to('article#update');
-    $r->delete('/blog/articles/:article_id/')->to('article#delete');
-    $r->post('/blog/articles/:article_id/comments/')->to('article#create_comment');
-    $r->get('/blog/articles/:article_id/comments/')->to('article#all_comments');
-    $r->get('/blog/articles/:article_id/comments/as_tree/')->to('article#all_comments_as_tree');
+    $r->get('/blog/articles/:article_id/')
+        ->to('article#get')
+        ->name('get_article');
+
+    $r->put('/blog/articles/:article_id/')
+        ->to('article#update')
+        ->name('update_article');
+
+    $r->delete('/blog/articles/:article_id/')
+        ->to('article#delete')
+        ->name('delete_article');
+
+    $r->post('/blog/articles/:article_id/comments/')
+        ->to('article#create_comment')
+        ->name('create_article_comment');
+
+    $r->get('/blog/articles/:article_id/comments/')
+        ->to('article#all_comments')
+        ->name('get_all_article_comments');
+
+    $r->get('/blog/articles/:article_id/comments/as_tree/')
+        ->to('article#all_comments_as_tree')
+        ->name('get_all_article_comments_as_tree');
 
     # Blog::Controller::ArticleComment
-    $r->get('/blog/comments/:comment_id/')->to('article_comment#get');
-    $r->put('/blog/comments/:comment_id/')->to('article_comment#update');
-    $r->delete('/blog/comments/:comment_id/')->to('article_comment#delete');
+    $r->get('/blog/comments/:comment_id/')
+        ->to('article_comment#get')
+        ->name('get_article_comment');
+
+    $r->put('/blog/comments/:comment_id/')
+        ->to('article_comment#update')
+        ->name('update_article_comment');
+
+    $r->delete('/blog/comments/:comment_id/')
+        ->to('article_comment#delete')
+        ->name('delete_article_comment');
 }
 
 sub init_models {

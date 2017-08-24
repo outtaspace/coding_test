@@ -19,9 +19,9 @@ my $t = Test::Mojo->new('Blog');
 subtest 'GET /blog/articles/' => sub {
     plan tests => 5;
 
-    my $articles = Blog::Test::Articles->new;
+    my $articles = Blog::Test::Articles->new(app => $t->app);
 
-    my $tx = $t->ua->build_tx(GET => $articles->url);
+    my $tx = $t->ua->build_tx(GET => $articles->get_all_articles);
 
     $t->request_ok($tx)
         ->status_is(200)
@@ -69,7 +69,7 @@ subtest 'PUT /blog/articles/:article_id/' => sub {
 
     my $form = {name => 'Another name'};
 
-    $t->put_ok($article->url, json => $form)
+    $t->put_ok($article->update_article, json => $form)
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
@@ -106,7 +106,7 @@ subtest 'foreign key' => sub {
 
     delete_article($article);
 
-    $t->get_ok($comment->url)->status_is(404)
+    $t->get_ok($comment->get_article_comment)->status_is(404)
 };
 
 #-----------------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ subtest 'PUT /blog/comments/:comment_id/' => sub {
         comment => 'Another comment body',
     };
 
-    $t->put_ok($comment->url, json => $form)
+    $t->put_ok($comment->update_article_comment, json => $form)
         ->status_is(200)
         ->content_type_is('application/json;charset=UTF-8')
         ->json_is({});
@@ -159,7 +159,7 @@ subtest 'GET /blog/articles/:article_id/comments/' => sub {
 
 
     my $json = do {
-        my $tx = $t->ua->build_tx(GET => $article->comments_url);
+        my $tx = $t->ua->build_tx(GET => $article->get_all_article_comments);
 
         $t->request_ok($tx)
             ->status_is(200)
@@ -219,7 +219,7 @@ subtest 'GET /blog/articles/:article_id/comments_as_tree/' => sub {
 
     my $comment_2_0 = create_comment($article, {parent_id => 0});
 
-    my $tx = $t->ua->build_tx(GET => $article->comments_as_tree_url);
+    my $tx = $t->ua->build_tx(GET => $article->get_all_article_comments_as_tree);
 
     $t->request_ok($tx)
         ->status_is(200)
@@ -273,11 +273,11 @@ subtest 'GET /blog/articles/:article_id/comments_as_tree/' => sub {
 #-----------------------------------------------------------------------------------------
 #-- subroutines --------------------------------------------------------------------------
 sub create_article {
-    my $articles     = Blog::Test::Articles->new;
+    my $articles     = Blog::Test::Articles->new(app => $t->app);
     my $article_name = 'Article name';
 
     my $tx = $t->ua->build_tx(
-        POST => $articles->url,
+        POST => $articles->create_article,
         json => {name => $article_name},
     );
 
@@ -296,6 +296,7 @@ sub create_article {
     };
 
     return Blog::Test::Article->new(
+        app  => $t->app,
         id   => $article_id,
         name => $article_name,
     );
@@ -309,7 +310,7 @@ sub get_article {
     subtest 'get_article()' => sub {
         plan tests => 7;
 
-        my $tx = $t->ua->build_tx(GET => $article->url);
+        my $tx = $t->ua->build_tx(GET => $article->get_article);
 
         $t->request_ok($tx)
             ->status_is(200)
@@ -327,6 +328,7 @@ sub get_article {
     };
 
     return Blog::Test::Article->new(
+        app  => $t->app,
         id   => $article_id,
         name => $article_name,
     );
@@ -338,12 +340,12 @@ sub delete_article {
     subtest 'delete_article()' => sub {
         plan tests => 6;
 
-        $t->delete_ok($article->url)
+        $t->delete_ok($article->delete_article)
             ->status_is(200)
             ->content_type_is('application/json;charset=UTF-8')
             ->json_is({});
 
-        $t->get_ok($article->url)->status_is(404);
+        $t->get_ok($article->get_article)->status_is(404);
     };
 
     undef $article;
@@ -361,7 +363,10 @@ sub create_comment {
     subtest 'create_comment()' => sub {
         plan tests => 5;
 
-        my $tx = $t->ua->build_tx(POST => $article->comments_url, json => $form);
+        my $tx = $t->ua->build_tx(
+            POST => $article->create_article_comment,
+            json => $form,
+        );
 
         $t->request_ok($tx)
             ->status_is(201)
@@ -373,6 +378,7 @@ sub create_comment {
     };
 
     return Blog::Test::ArticleComment->new(
+        app        => $t->app,
         id         => $comment_id,
         parent_id  => $form->{'parent_id'},
         name       => $form->{'name'},
@@ -388,7 +394,7 @@ sub get_comment {
     subtest 'get_comment()' => sub {
         plan tests => 13;
 
-        my $tx = $t->ua->build_tx(GET => $comment->url);
+        my $tx = $t->ua->build_tx(GET => $comment->get_article_comment);
 
         $t->request_ok($tx)
             ->status_is(200)
@@ -408,6 +414,7 @@ sub get_comment {
     };
 
     return Blog::Test::ArticleComment->new(
+        app        => $t->app,
         id         => $json->{'id'},
         article_id => $json->{'article_id'},
         parent_id  => $json->{'parent_id'},
@@ -422,12 +429,12 @@ sub delete_comment {
     subtest 'delete_comment()' => sub {
         plan tests => 6;
 
-        $t->delete_ok($comment->url)
+        $t->delete_ok($comment->delete_article_comment)
             ->status_is(200)
             ->content_type_is('application/json;charset=UTF-8')
             ->json_is({});
 
-        $t->get_ok($comment->url)->status_is(404)
+        $t->get_ok($comment->get_article_comment)->status_is(404)
     };
 
     undef $comment;

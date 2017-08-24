@@ -3,30 +3,49 @@
 use lib::abs qw(../lib);
 
 use Mojo::Base -strict;
+use Test::Mojo;
 use Test::More;
 
 plan tests => 4;
+
+my $t = Test::Mojo->new('Blog');
 
 use_ok 'Blog::Test::ArticleComment';
 require_ok 'Blog::Test::ArticleComment';
 
 subtest 'new()' => sub {
-    plan tests => 3;
+    plan tests => 5;
 
-    my $o = Blog::Test::ArticleComment->new;
+    my $o = Blog::Test::ArticleComment->new(app => $t->app);
 
     ok $o;
     isa_ok $o, 'Mojo::Base';
-    can_ok $o, qw(url id article_id parent_id name comment);
-};
-
-subtest 'url()' => sub {
-    plan tests => 1;
-
-    my $o = Blog::Test::ArticleComment->new(
-        id => 42,
+    can_ok $o, qw(
+        app
+        id
+        article_id
+        parent_id
+        name
+        comment
+        get_article_comment
+        update_article_comment
+        delete_article_comment
     );
 
-    is $o->url, '/blog/comments/42/';
+    isa_ok $o->app, 'Mojolicious';
+    isa_ok $o->app, 'Blog';
+};
+
+subtest 'routes' => sub {
+    plan tests => 3;
+
+    my $o = Blog::Test::ArticleComment->new(
+        app => $t->app,
+        id  => 42,
+    );
+
+    is $o->get_article_comment,    '/blog/comments/42';
+    is $o->update_article_comment, '/blog/comments/42';
+    is $o->delete_article_comment, '/blog/comments/42';
 };
 
