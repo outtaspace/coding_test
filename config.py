@@ -4,7 +4,7 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'no warnings about no-secrets'
     SQLALCHEMY_DATABASE_URI = (
-        'mysql+mysqlconnector://coding_test:coding_test@localhost/coding_test'
+        'postgresql+psycopg2://postgres:@localhost/coding_test'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
