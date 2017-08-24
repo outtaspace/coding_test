@@ -14,17 +14,17 @@ RUN apk update && \
 WORKDIR $DIRPATH
 
 ADD lib/ lib/
+ADD bin/ bin/
 ADD migrations/ migrations/
 ADD t/ t/
-ADD rest_api.production.conf rest_api.conf
-ADD rest_api.pl .
+ADD blog.production.conf blog.conf
 
 ENV MOJO_MIGRATIONS_DEBUG 1
 ENV MOJO_REVERSE_PROXY 1
 ENV MOJO_MODE production
 
-CMD ["perl", "rest_api.pl", "migrate"]
-CMD ["perl", "rest_api.pl", "test"]
+CMD ["perl", "bin/run.pl", "migrate"]
+CMD ["perl", "bin/run.pl", "test"]
 
 EXPOSE 8080
-ENTRYPOINT ["perl", "rest_api.pl", "prefork", "-l", "http://*:8080"]
+ENTRYPOINT ["perl", "bin/run.pl", "prefork", "-l", "http://*:8080"]

@@ -3,7 +3,7 @@ services:
     nginx-proxy:
         image: jwilder/nginx-proxy:alpine
         container_name: nginx-proxy
-        restart: always
+        restart: on-failure
         ports:
             - "80:80"
         volumes:
