@@ -3,9 +3,12 @@
 bin
 include
 lib
+lib64
 local
+share
 __pycache__
 .idea
 .vscode
 migrations
 tags
+pyvenv.cfg
