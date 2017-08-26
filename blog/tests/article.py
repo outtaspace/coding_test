@@ -25,4 +25,7 @@ class Article:
         return url_for('article.get_all_article_comments', article_id=self.id)
 
     def get_all_article_comments_as_tree(self) -> str:
-        return url_for('article.get_all_article_comments_as_tree', article_id=self.id)
+        return url_for(
+            'article.get_all_article_comments_as_tree',
+            article_id=self.id
+        )

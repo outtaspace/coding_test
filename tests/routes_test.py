@@ -2,11 +2,10 @@
 
 import abc
 import unittest
-
 from app import app
-from blog.tests.articles import Articles
 from blog.tests.article import Article
 from blog.tests.article_comment import ArticleComment
+from blog.tests.articles import Articles
 
 
 class IRoutesTester(abc.ABC):
@@ -135,6 +134,7 @@ def build_suite() -> unittest.TestSuite:
     suite.addTest(unittest.makeSuite(TestArticleRoutes))
     suite.addTest(unittest.makeSuite(TestArticleCommentRoutes))
     return suite
+
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(build_suite())

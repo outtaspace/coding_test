@@ -2,7 +2,14 @@ from flask import url_for
 
 
 class ArticleComment:
-    def __init__(self, comment_id: int, article_id: int, parent_id: int, name: str, comment: str) -> None:
+    def __init__(
+            self,
+            comment_id: int,
+            article_id: int,
+            parent_id: int,
+            name: str,
+            comment: str
+    ) -> None:
         assert isinstance(comment_id, int)
         assert isinstance(article_id, int)
         assert isinstance(parent_id, int)

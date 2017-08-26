@@ -1,9 +1,8 @@
 from app import db
-from flask import Blueprint, jsonify, request
-
 from blog import handle_validation_error, OK
 from blog.forms import ArticleCommentForm, ValidationError
 from blog.models import ArticleComment
+from flask import Blueprint, jsonify, request
 
 bp = Blueprint('article_comment', __name__)
 
