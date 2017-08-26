@@ -21,8 +21,14 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    from articles.blueprint import articles
-    app.register_blueprint(articles)
+    from blog.views.articles import bp as articles_bp
+    from blog.views.article import bp as article_bp
+    from blog.views.article_comment import bp as article_comment_bp
+
+    url_prefix = '/blog'
+    app.register_blueprint(articles_bp, url_prefix=url_prefix)
+    app.register_blueprint(article_bp, url_prefix=url_prefix)
+    app.register_blueprint(article_comment_bp, url_prefix=url_prefix)
 
 
 db = SQLAlchemy()
