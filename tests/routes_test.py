@@ -14,31 +14,17 @@ class IRoutesTester(abc.ABC):
     def routing_instance(self) -> object:
         pass
 
-    @staticmethod
-    @abc.abstractmethod
-    def to_absolute_url(url: str) -> str:
-        pass
 
-
-class TestRoutes(unittest.TestCase, IRoutesTester):
+class TestRoutes(unittest.TestCase):
     def setUp(self) -> None:
-        app.config['SERVER_NAME'] = 'tratata.org'
         self.app_context = app.app_context()
         self.app_context.push()
 
     def tearDown(self) -> None:
         self.app_context.pop()
 
-    @property
-    def routing_instance(self) -> object:
-        pass
 
-    @staticmethod
-    def to_absolute_url(url: str) -> str:
-        return 'http://' + app.config['SERVER_NAME'] + url
-
-
-class TestArticlesRoutes(TestRoutes):
+class TestArticlesRoutes(TestRoutes, IRoutesTester):
     @property
     def routing_instance(self) -> Articles:
         return Articles()
@@ -46,17 +32,17 @@ class TestArticlesRoutes(TestRoutes):
     def test_get_all_articles(self) -> None:
         self.assertEqual(
             self.routing_instance.get_all_articles(),
-            self.to_absolute_url('/blog/articles')
+            '/blog/articles'
         )
 
     def test_create_article(self) -> None:
         self.assertEqual(
             self.routing_instance.create_article(),
-            self.to_absolute_url('/blog/articles')
+            '/blog/articles'
         )
 
 
-class TestArticleRoutes(TestRoutes):
+class TestArticleRoutes(TestRoutes, IRoutesTester):
     @property
     def routing_instance(self) -> Article:
         return Article(article_id=42, name='Article name')
@@ -64,41 +50,41 @@ class TestArticleRoutes(TestRoutes):
     def test_get_article(self) -> None:
         self.assertEqual(
             self.routing_instance.get_article(),
-            self.to_absolute_url('/blog/articles/42')
+            '/blog/articles/42'
         )
 
     def test_update_article(self) -> None:
         self.assertEqual(
             self.routing_instance.update_article(),
-            self.to_absolute_url('/blog/articles/42')
+            '/blog/articles/42'
         )
 
     def test_delete_article(self) -> None:
         self.assertEqual(
             self.routing_instance.delete_article(),
-            self.to_absolute_url('/blog/articles/42')
+            '/blog/articles/42'
         )
 
     def test_create_article_comment(self) -> None:
         self.assertEqual(
             self.routing_instance.create_article_comment(),
-            self.to_absolute_url('/blog/articles/42/comments')
+            '/blog/articles/42/comments'
         )
 
     def test_get_all_article_comments(self) -> None:
         self.assertEqual(
             self.routing_instance.get_all_article_comments(),
-            self.to_absolute_url('/blog/articles/42/comments')
+            '/blog/articles/42/comments'
         )
 
     def test_get_all_article_comments_as_tree(self) -> None:
         self.assertEqual(
             self.routing_instance.get_all_article_comments_as_tree(),
-            self.to_absolute_url('/blog/articles/42/comments/as_tree')
+            '/blog/articles/42/comments/as_tree'
         )
 
 
-class TestArticleCommentRoutes(TestRoutes):
+class TestArticleCommentRoutes(TestRoutes, IRoutesTester):
     @property
     def routing_instance(self) -> ArticleComment:
         return ArticleComment(
@@ -112,19 +98,19 @@ class TestArticleCommentRoutes(TestRoutes):
     def test_get_article_comment(self) -> None:
         self.assertEqual(
             self.routing_instance.get_article_comment(),
-            self.to_absolute_url('/blog/comments/2')
+            '/blog/comments/2'
         )
 
     def test_update_article_comment(self) -> None:
         self.assertEqual(
             self.routing_instance.update_article_comment(),
-            self.to_absolute_url('/blog/comments/2')
+            '/blog/comments/2'
         )
 
     def test_delete_article_comment(self) -> None:
         self.assertEqual(
             self.routing_instance.delete_article_comment(),
-            self.to_absolute_url('/blog/comments/2')
+            '/blog/comments/2'
         )
 
 

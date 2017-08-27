@@ -11,7 +11,7 @@ before_script:
   - python manage.py db init
   - python manage.py db migrate
   - python manage.py db upgrade
-script: "python test.py"
+script: "python manage.py test --verbosity=2"
 sudo: false
 notifications:
   email: false
